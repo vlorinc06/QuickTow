@@ -1,0 +1,169 @@
+Create Table felhasznalo(
+    vezeteknev varchar(50),
+    keresztnev varchar(50),
+    felhasznalonev varchar(50),
+    jelszo varchar(50),
+    email varchar(50),
+    telefonszam varchar(50),
+    felhasznaloID int,
+    CONSTRAINT PK_felhasznID PRIMARY KEY (felhasznaloID)
+);
+
+
+CREATE TABLE jarmu(
+    rendszam varchar(20),
+    marka varchar(20),
+    tipus varchar(20),
+    jarmuID int,
+    felhasznaloID int,
+    CONSTRAINT PK_jarmuID PRIMARY KEY (jarmuID),
+    CONSTRAINT FK_jarmuFelhasznID FOREIGN KEY (felhasznaloID) REFERENCES felhasznalo(felhasznaloID)
+);
+
+CREATE TABLE automento(
+    vezeteknev varchar(50),
+    keresztnev varchar(50),
+    felhasznalonev varchar(50),
+    jelszo varchar(50),
+    email varchar(50),
+    telefonszam varchar(50),
+    kordinataX double,
+    kordinataY double,
+    statusz varchar(20),
+    mentoID int,
+    CONSTRAINT PK_mentoID Primary KEY (mentoID)
+);
+
+CREATE TABLE vontatasikeres(
+    vontatasiID int,
+    felhasznaloID int,
+    jarmuID int,
+    mentoID int,
+    felvetelipontX double,
+    felvetelipontY double,
+    lerakasipontX double,
+    lerakasipontY double,
+    statusz varchar(20),
+    ar int,
+    CONSTRAINT PK_vontatasiID PRIMARY KEY (vontatasiID),
+    CONSTRAINT FK_vontatasFelhasznID FOREIGN KEY (felhasznaloID) REFERENCES felhasznalo(felhasznaloID),
+    CONSTRAINT FK_vontatasJarmuID FOREIGN KEY (jarmuID) REFERENCES jarmu(jarmuID),
+    CONSTRAINT FK_vontatasMentoID FOREIGN KEY (mentoID) REFERENCES automento(mentoID)
+);
+
+CREATE TABLE fizetes(
+    fizetesID int,
+    ar int,
+    idopont varchar(50),
+    felhasznaloID int,
+    mentoID int,
+    fizetesimodszer varchar(20),
+    CONSTRAINT PK_fizetesID PRIMARY KEY (fizetesID),
+    CONSTRAINT FK_fizetesFelhasznID FOREIGN KEY (felhasznaloID) REFERENCES felhasznalo(felhasznaloID),
+    CONSTRAINT FK_fizetesMentoID FOREIGN KEY (mentoID) REFERENCES automento(mentoID)
+);
+
+CREATE TABLE ertekeles(
+    ertekelesID int,
+    felhasznaloID int,
+    mentoID int,
+    vontatasID int,
+    ertekeles int,
+    szoveg varchar(200),
+    idopont varchar(50),
+    CONSTRAINT PK_ertekelesID PRIMARY KEY (ertekelesID),
+    CONSTRAINT FK_ertekelesFelhasznaloID FOREIGN KEY (felhasznaloID) REFERENCES felhasznalo(felhasznaloID),
+    CONSTRAINT FK_ertekelesMentoID FOREIGN KEY (mentoID) REFERENCES automento(mentoID),
+    CONSTRAINT FK_ertekelesVontatasID FOREIGN KEY (vontatasID) REFERENCES vontatasikeres(vontatasiID)
+);
+INSERT INTO felhasznalo (felhasznaloID, vezeteknev, keresztnev, felhasznalonev, jelszo, email, telefonszam)
+VALUES
+(1, 'Kiss', 'Péter', 'pkiss', 'jelszo123', 'pkiss@gmail.com', '06301234567'),
+(2, 'Nagy', 'Anna', 'annus', 'titok456', 'anna.nagy@yahoo.com', '06204567891'),
+(3, 'Tóth', 'László', 'laszit', 'pass789', 'toth.l@gmail.com', '06709876543'),
+(4, 'Szabó', 'Réka', 'rekuci', 'reka111', 'reka.szabo@freemail.hu', '06305556666'),
+(5, 'Molnár', 'Gábor', 'gabi_m', 'molnar12', 'gabi.molnar@outlook.com', '06203334444'),
+(6, 'Horváth', 'Dóra', 'dodo', 'dodo22', 'dora.horvath@gmail.com', '06701112233'),
+(7, 'Farkas', 'Bence', 'benyo', 'benyo33', 'bence.farkas@mail.com', '06304445555'),
+(8, 'Balogh', 'Zsófia', 'zsofiB', 'zsofi88', 'zsofi.balogh@gmail.com', '06201110000'),
+(9, 'Varga', 'István', 'istiV', 'vargaa', 'varga.istvan@freemail.hu', '06706665555'),
+(10, 'Kovács', 'Emese', 'emi', 'emese123', 'emese.kovacs@yahoo.com', '06302221111'),
+(11, 'Simon', 'Tamás', 'stomi', 'passT', 'simon.tamas@mail.com', '06707778888'),
+(12, 'Jakab', 'Rita', 'ritaJ', 'jaki22', 'jakab.rita@gmail.com', '06203332211'),
+(13, 'Papp', 'Balázs', 'pbal', 'pappbal', 'papp.balazs@gmail.com', '06301239876'),
+(14, 'Szalai', 'Márta', 'martaS', 'szalaiM', 'szalai.marta@freemail.hu', '06706669999'),
+(15, 'Veres', 'Levente', 'leviV', 'leviTow', 'veres.levente@outlook.com', '06207775555');
+
+INSERT INTO jarmu (jarmuID, rendszam, marka, tipus, felhasznaloID)
+VALUES
+(1, 'ABC-123', 'Toyota', 'Corolla', 1),
+(2, 'BCD-234', 'Volkswagen', 'Golf', 2),
+(3, 'CDE-345', 'Ford', 'Focus', 3),
+(4, 'DEF-456', 'Renault', 'Megane', 4),
+(5, 'EFG-567', 'Opel', 'Astra', 5),
+(6, 'FGH-678', 'Peugeot', '308', 6),
+(7, 'GHI-789', 'Hyundai', 'i30', 7),
+(8, 'HIJ-890', 'Kia', 'Ceed', 8),
+(9, 'IJK-901', 'Mazda', '3', 9),
+(10, 'JKL-012', 'Skoda', 'Octavia', 10),
+(11, 'LMN-234', 'BMW', '320d', 11),
+(12, 'MNO-345', 'Audi', 'A3', 12),
+(13, 'NOP-456', 'Mercedes', 'C200', 13),
+(14, 'OPQ-567', 'Seat', 'Leon', 14),
+(15, 'PQR-678', 'Suzuki', 'Vitara', 15);
+
+INSERT INTO automento (mentoID, vezeteknev, keresztnev, felhasznalonev, jelszo, email, telefonszam, kordinataX, kordinataY, statusz)
+VALUES
+(1, 'Lukács', 'Tamás', 'lukitow', 'tow123', 'lukacs.tamas@tow.hu', '06309998888', 47.4979, 19.0402, 'elérhető'),
+(2, 'Kocsis', 'Bálint', 'bala', 'towtow', 'kocsis.balint@tow.hu', '06702223333', 47.5312, 21.6273, 'elérhető'),
+(3, 'Nemes', 'Gergő', 'gergoN', 'gergoTow', 'nemes.gergo@tow.hu', '06305557777', 47.902, 20.374, 'foglalt'),
+(4, 'Szűcs', 'Erik', 'eriktow', 'passTow', 'szucs.erik@tow.hu', '06207778888', 46.253, 20.141, 'elérhető'),
+(5, 'Oláh', 'Kristóf', 'kristow', 'tow2025', 'olah.kristof@tow.hu', '06703334444', 47.531, 19.05, 'elérhető'),
+(6, 'Török', 'Miklós', 'mikitow', 'miki22', 'torok.miklos@tow.hu', '06302225555', 47.67, 19.28, 'foglalt'),
+(7, 'Bognár', 'Ádám', 'adamB', 'adamTow', 'bognar.adam@tow.hu', '06701113333', 47.92, 20.14, 'elérhető');
+
+INSERT INTO vontatasikeres (vontatasiID, felhasznaloID, jarmuID, mentoID, felvetelipontX, felvetelipontY, lerakasipontX, lerakasipontY, statusz, ar)
+VALUES
+(1, 1, 1, 1, 47.49, 19.05, 47.51, 19.02, 'befejezve', 15000),
+(2, 2, 2, 2, 47.54, 21.61, 47.52, 21.63, 'befejezve', 18000),
+(3, 3, 3, 3, 47.91, 20.36, 47.89, 20.38, 'függőben', 0),
+(4, 4, 4, 1, 46.26, 20.15, 46.24, 20.13, 'befejezve', 16000),
+(5, 5, 5, 4, 47.52, 19.04, 47.54, 19.06, 'befejezve', 20000),
+(6, 6, 6, 5, 47.51, 19.07, 47.53, 19.05, 'függőben', 0),
+(7, 7, 7, 2, 47.54, 21.62, 47.56, 21.64, 'befejezve', 17000),
+(8, 8, 8, 3, 47.88, 20.38, 47.9, 20.36, 'befejezve', 19000),
+(9, 9, 9, 1, 47.49, 19.02, 47.51, 19.04, 'befejezve', 21000),
+(10, 10, 10, 5, 47.52, 19.06, 47.54, 19.04, 'függőben', 0),
+(11, 11, 11, 6, 47.65, 19.26, 47.68, 19.23, 'befejezve', 22000),
+(12, 12, 12, 7, 47.93, 20.13, 47.91, 20.12, 'befejezve', 25000),
+(13, 13, 13, 2, 47.53, 21.62, 47.55, 21.65, 'befejezve', 18000),
+(14, 14, 14, 3, 47.89, 20.36, 47.87, 20.35, 'függőben', 0),
+(15, 15, 15, 4, 46.26, 20.12, 46.28, 20.15, 'befejezve', 20000);
+
+INSERT INTO fizetes (fizetesID, ar, idopont, felhasznaloID, mentoID, fizetesimodszer)
+VALUES
+(1, 15000, '2025-01-15 14:32', 1, 1, 'kártya'),
+(2, 18000, '2025-02-10 11:22', 2, 2, 'készpénz'),
+(3, 16000, '2025-03-08 09:45', 4, 1, 'kártya'),
+(4, 20000, '2025-03-25 17:30', 5, 4, 'utalás'),
+(5, 17000, '2025-04-12 10:00', 7, 2, 'kártya'),
+(6, 19000, '2025-05-01 15:00', 8, 3, 'utalás'),
+(7, 21000, '2025-06-18 19:40', 9, 1, 'készpénz'),
+(8, 22000, '2025-07-02 08:50', 11, 6, 'kártya'),
+(9, 25000, '2025-08-14 12:30', 12, 7, 'utalás'),
+(10, 18000, '2025-09-05 16:10', 13, 2, 'készpénz'),
+(11, 20000, '2025-09-20 11:11', 15, 4, 'kártya');
+
+INSERT INTO ertekeles (ertekelesID, felhasznaloID, mentoID, vontatasID, ertekeles, szoveg, idopont)
+VALUES
+(1, 1, 1, 1, 5, 'Gyors és profi munka, ajánlom!', '2025-01-15'),
+(2, 2, 2, 2, 4, 'Kicsit késett, de segítőkész volt.', '2025-02-11'),
+(3, 4, 1, 4, 5, 'Nagyon elégedett vagyok!', '2025-03-09'),
+(4, 5, 4, 5, 5, 'Kedves és precíz mentős.', '2025-03-26'),
+(5, 7, 2, 7, 4, 'Jó szolgáltatás, kicsit drága.', '2025-04-13'),
+(6, 8, 3, 8, 5, 'Gyors reakció, minden rendben.', '2025-05-02'),
+(7, 9, 1, 9, 5, 'Minden rendben zajlott.', '2025-06-19'),
+(8, 11, 6, 11, 4, 'Pontos és udvarias.', '2025-07-03'),
+(9, 12, 7, 12, 5, 'Kiváló, modern felszerelés.', '2025-08-15'),
+(10, 13, 2, 13, 4, 'Gyorsan reagált, de drága volt.', '2025-09-06'),
+(11, 15, 4, 15, 5, 'Tökéletes szolgáltatás.', '2025-09-22');
