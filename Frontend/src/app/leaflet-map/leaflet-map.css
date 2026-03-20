@@ -1,0 +1,44 @@
+:host{
+    display: block;
+    height: 100%;
+}
+
+#map{
+    height: 80vh;
+    width: 100%;
+    min-height: 300px;
+}
+
+.map-wrap{
+    position: relative;
+    width: 100%;
+    min-height: 0;
+    border: black 3px solid;
+}
+
+.map-btn{
+    z-index: 1000;
+}
+
+.btn{
+    background-color: #2f506b;
+    border: black solid 2px;
+}
+
+.input-group{
+    border: black solid 2px;
+    border-radius: 5px;
+}
+
+.input-group .btn{
+    border: 0px;
+}
+
+.map-bar{
+    position: absolute;
+    background-color: #1f2f3d;
+    z-index: 1000;
+    width: 100%;
+    height: auto;
+}
+

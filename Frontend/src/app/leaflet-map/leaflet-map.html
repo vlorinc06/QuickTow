@@ -1,0 +1,33 @@
+<div class="map-wrap mb-3 mt-lg-2 rounded-4">
+    @if(auth.isRegularUser() && !auth.isRequesting()){
+    <div class="map-bar row g-2 px-3 py-2 mb-2 rounded-4 mx-auto align-items-center justify-content-center">
+        <div class="col-12 col-lg-auto mb-1">
+            <button class="btn btn-primary map-btn w-100 w-lg-auto" (click)="getLocation()">
+                Helyadat lekérése
+            </button>
+        </div>
+        
+        <div class="col-12 col-lg mb-1">
+            <div class="input-group input-group">
+                <input type="text" class="form-control" placeholder="Cím beírása" (keyup.enter)="searchStreet()"
+                    [(ngModel)]="street">
+                <button class="btn btn-secondary" type="button" (click)="searchStreet()">
+                    Cím keresése
+                </button>
+            </div>
+        </div>
+        <div class=" col-12 col-lg-auto d-flex align-items-center justify-content-center mb-1">
+            <input type="number" class="form-control me-2" style="width: 80px" [(ngModel)]="radius" placeholder="km">
+            <span class="text-light fw-bold me-2">
+                Km-en belül
+            </span>
+        </div>
+        <div class="col-12 col-lg-auto mb-1">
+            <button class="btn btn-primary w-100 w-lg-auto" (click)="search()">
+                Keresés
+            </button>
+        </div>
+   </div>
+}
+    <div id="map" class="map rounded-4"></div>
+</div>

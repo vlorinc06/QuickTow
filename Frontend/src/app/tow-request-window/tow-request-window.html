@@ -1,0 +1,117 @@
+<div class="tow-dialog container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="flex-grow-1 text-center">
+            <h2 class="tow-title mb-0">Vontatási Kérés</h2>
+        </div>
+
+        <button type="button" class="btn-close ms-3" aria-label="Close" (click)="closeDialog()"></button>
+    </div>
+
+    <div class="selection-box p-3 mb-4">
+        <div class="selection-scroll pe-1">
+            <h4 class="car-select-title">Autó kiválasztása:</h4>
+            @for (car of this.vehicles.vehicles(); track $index) {
+            @if(car.id){
+            <div class="car-item d-flex align-items-center justify-content-between mb-3" [ngClass]="{'car-item-selected':car.id == vehicles.selectedId}" (click)="selectCar(car.id)">
+                <div class="d-flex align-items-center">
+                    <div class="car-icon me-3">
+                        <img src="../../assets/images/car_icon.png">
+                    </div>
+
+                    <div>
+                        <div class="car-title">{{ car.brand }} {{car.model}}
+                            @if(car.id == vehicles.selectedId){
+                                <span class="text-secondary">Kiválasztva</span>
+                            }
+                        </div>
+                        <div class="car-subtitle">{{ car.license_plate }}</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-danger btn-sm px-3" type="button" (click)="deleteCar(car.id)">
+                    Autó törlése
+                </button>
+
+            </div>
+            }
+            }
+            @if(!isAddingCar){
+            <div class="add-car-item d-flex align-items-center" role="button" tabindex="0" (click)="startAddingCar()">
+                <div class="add-icon me-3">
+                    <i class="bi bi-plus"></i>
+                </div>
+                <div class="add-text">Új autó hozzáadása</div>
+            </div>
+            }
+
+            @if(isAddingCar){
+            <div class="car-item adding-car-item mb-3">
+                <div class="adding-car-layout">
+                    <div class="car-icon add-car-icon">
+                        <img src="assets/images/car_icon.png" alt="Car">
+                    </div>
+
+                    <div class="adding-car-content">
+                        <div class="adding-car-fields">
+                            <input type="text" class="form-control" placeholder="Márka (pl. Suzuki)"
+                                [(ngModel)]="car.brand" />
+
+                            <input type="text" class="form-control" placeholder="Model (pl. Swift)"
+                                [(ngModel)]="car.model" />
+
+                            <input type="text" class="form-control" placeholder="Rendszám"
+                                [(ngModel)]="car.license_plate" />
+                        </div>
+
+                        <div class="add-car-actions">
+                            <button class="btn btn-outline-secondary" type="button" (click)="cancelAddingCar()">
+                                Mégsem
+                            </button>
+
+                            <button class="btn btn-success save-car-btn" type="button" (click)="saveCar()">
+                                Mentés
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+
+
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label tow-label">
+            Tartózkodási hely pontosítása (az autómentő számára):
+        </label>
+        <input type="text" class="form-control tow-input" [(ngModel)]="pickupAddress" placeholder="pl. Ózd, Kossuth Lajos u. 83"/>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label tow-label">Lerakási cím (utca) megadása:</label>
+        
+        <div class="input-group input-group">
+                <input type="text" class="form-control tow-input" [(ngModel)]="dropoffAddress" placeholder="pl. Ózd, Március 15 utca / Ózd, Göngyösi Gumi Kft"/>
+                <button class="btn btn-secondary" [ngClass]="{'btn-search':dropoffAddress, 'disabled':!dropoffAddress}" type="button" (click)="searchStreet()">
+                    Cím keresése
+                </button>
+            </div>
+    </div>
+
+    <div class="price-section text-end mb-4">
+        <div class="price-main">Végleges Ár: {{fullPrice()}} Ft</div>
+        <div class="price-sub">{{distance()}} Km</div>
+        <div class="price-sub">{{towUserPrice()}} Ft / Km</div>
+    </div>
+
+    <div class="d-flex justify-content-between pt-2">
+        <button type="button" class="btn btn-danger px-4" (click)="closeDialog()">
+            Mégsem
+        </button>
+
+        <button type="button" class="btn btn-success px-4" (click)="sendRequest()">
+            Kérés küldése
+        </button>
+    </div>
+</div>
