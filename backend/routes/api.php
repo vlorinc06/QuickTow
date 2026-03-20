@@ -21,6 +21,7 @@ Route::get('/vehicles',[VehicleController::class,'index']);
 Route::get('/vehicles/id/{id}',[VehicleController::class,'getById']);
 Route::get('/vehicles/user/{user}',[VehicleController::class,'getByUser']);
 Route::post('/vehicles',[VehicleController::class,'store']);
+Route::delete('/vehicles/{id}',[VehicleController::class,'destroy']);
 
 
 Route::get('/towusers',[TowUserController::class,'index']);

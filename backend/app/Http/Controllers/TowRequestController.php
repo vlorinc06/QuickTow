@@ -84,7 +84,7 @@ class TowRequestController extends Controller
             return response('Invalid filter type',400);
         }
 
-        $userExists = false;
+        $userExists = null;
         if($type == 'user')
         {
             $userExists = User::find($id);
@@ -102,10 +102,10 @@ class TowRequestController extends Controller
             }
         }
 
-        $towRequest = TowRequest::where($type,'=',$id)->get();
+        $towRequest = TowRequest::with('user','vehicle','towUser')->where($type,'=',$id)->get();
         if($towRequest->isEmpty())
         {
-            return response('No tow requests found',200);
+            return response()->json([],200);
         }
         
         return response()->json($towRequest,200);

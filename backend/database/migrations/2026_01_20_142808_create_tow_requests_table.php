@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('tow_user')->nullable()->references('id')->on('tow_users')->nullOnDelete();
             $table->double('pickup_lat');
             $table->double('pickup_long');
+            $table->string('pickup_note')->nullable();
             $table->double('dropoff_lat');
             $table->double('dropoff_long');
             $table->string('status', 20);

@@ -15,15 +15,8 @@ class User extends Authenticatable
     public $timestamps = false;
     public $guarded = [];
 
-    /*protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
-    */
-
     protected $hidden = [
-        'password',
+        'password'
     ];
 
     protected function casts(): array
