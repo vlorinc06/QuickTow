@@ -59,6 +59,9 @@ export class LocationTrackingService {
           next: (res) => {
             console.log('Location updated', res);
           },
+          error: (err) =>{
+            console.error('location update failed',err)
+          }
         });
       },
       (error) => {

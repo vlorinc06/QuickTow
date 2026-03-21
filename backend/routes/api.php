@@ -4,7 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\TowRequestController;
 use App\Http\Controllers\TowUserController;
@@ -39,11 +38,6 @@ Route::get('/towrequests/id/{id}',[TowRequestController::class,'getById']);
 Route::get('/towrequests/getby/{type}/{id}',[TowRequestController::class,'getBy']);
 Route::post('/towrequests',[TowRequestController::class,'store']);
 Route::put('/towrequests/{id}',[TowRequestController::class,'update']);
-
-
-Route::get('/payments',[PaymentController::class,'index']);
-Route::get('/payments/getby/{type}/{id}',[PaymentController::class,'getBy']);
-Route::post('/payments',[PaymentController::class,'store']);
 
 
 Route::get('/ratings',[RatingController::class,'index']);

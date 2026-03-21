@@ -23,6 +23,8 @@ return new class extends Migration
             $table->double('dropoff_long');
             $table->string('status', 20);
             $table->integer('price')->default(0);
+            $table->boolean('user_confirmed')->default(false);
+            $table->boolean('tow_user_confirmed')->default(false);
         });
     }
 

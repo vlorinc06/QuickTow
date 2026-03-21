@@ -118,24 +118,6 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        /** ================= PAYMENTS (60) ================= */
-        $paymentMethods = ['card', 'cash'];
-
-        foreach ($towModels as $i => $tow) {
-            for ($k = 0; $k < 3; $k++) {
-                $user = $userModels[$k % count($userModels)];
-                $towRequest = $requests[$i % count($requests)];
-
-                Payment::create([
-                    'price' => $towRequest->price,
-                    'user' => $user->id,
-                    'tow_user' => $tow->id,
-                    'tow_request' => $towRequest->id,
-                    'payment_method' => $paymentMethods[array_rand($paymentMethods)],
-                ]);
-            }
-        }
-
         /** ================= RATINGS (60) ================= */
         $ratingComments = [
             'Gyors és megbízható segítség.',

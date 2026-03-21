@@ -13,7 +13,9 @@ export interface TowRequest{
     dropoff_lat: number,
     dropoff_long: number,
     status: string,
-    price: number
+    price: number,
+    user_confirmed: number,
+    tow_user_confirmed: number
 }
 
 export interface TowRequestPost{
@@ -27,4 +29,9 @@ export interface TowRequestPost{
     dropoff_long: number,
     status: string,
     price: number
+}
+
+export interface TowRequestEndDialogData{
+    request: TowRequest,
+    isTowUser: boolean
 }

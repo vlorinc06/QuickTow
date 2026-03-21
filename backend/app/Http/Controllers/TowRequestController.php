@@ -46,11 +46,15 @@ class TowRequestController extends Controller
         }
 
         $allowed = [
-            'status'
+            'status',
+            'user_confirmed',
+            'tow_user_confirmed'
         ];
 
         $validator = Validator::make($request->only($allowed),[
-            'status' => 'sometimes|required|string|max:20'
+            'status' => 'sometimes|required|string|max:20',
+            'user_confirmed'=>'sometimes|required',
+            'tow_user_confirmed'=>'sometimes|required'
         ]);
 
         if ($validator->fails()) 
@@ -67,7 +71,7 @@ class TowRequestController extends Controller
 
     public function getById($id)
     {
-        $towRequest = TowRequest::find($id);
+        $towRequest = TowRequest::with('user','vehicle','towUser')->find($id);
         if(is_null($towRequest))
         {
             return response("Tow request not found",404);

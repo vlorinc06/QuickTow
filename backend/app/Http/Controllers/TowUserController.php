@@ -77,7 +77,9 @@ class TowUserController extends Controller
             'first_name',
             'username',
             'email',
-            'phone_number'
+            'phone_number',
+            'latitude',
+            'longitude'
         ]));
 
         $user->password = Hash::make($request->password);

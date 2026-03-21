@@ -1,0 +1,41 @@
+.rating-dialog {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.reviews-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.reviews-scroll {
+  flex-grow: 1;
+  overflow-y: auto;
+  min-height: 0; 
+}
+
+.review-card {
+  background-color: #f8f9fa;
+}
+
+.review-user {
+  width: 85px;
+  flex-shrink: 0;
+}
+
+.review-avatar {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.back-btn {
+  min-width: 160px;
+}
+
+.rating-dialog {
+  height: 650px;
+  max-height: 85vh;
+}
+

@@ -3,7 +3,7 @@
     <div class="map-bar row g-2 px-3 py-2 mb-2 rounded-4 mx-auto align-items-center justify-content-center">
         <div class="col-12 col-lg-auto mb-1">
             <button class="btn btn-primary map-btn w-100 w-lg-auto" (click)="getLocation()">
-                Helyadat lekérése
+                <i class="bi bi-geo-alt-fill"></i> Helyadatok lekérése
             </button>
         </div>
         
@@ -12,19 +12,21 @@
                 <input type="text" class="form-control" placeholder="Cím beírása" (keyup.enter)="searchStreet()"
                     [(ngModel)]="street">
                 <button class="btn btn-secondary" type="button" (click)="searchStreet()">
+                    <i class="bi bi-house"></i>
                     Cím keresése
                 </button>
             </div>
         </div>
         <div class=" col-12 col-lg-auto d-flex align-items-center justify-content-center mb-1">
+            
             <input type="number" class="form-control me-2" style="width: 80px" [(ngModel)]="radius" placeholder="km">
             <span class="text-light fw-bold me-2">
-                Km-en belül
+                Km-en belül 
             </span>
         </div>
         <div class="col-12 col-lg-auto mb-1">
             <button class="btn btn-primary w-100 w-lg-auto" (click)="search()">
-                Keresés
+                <i class="bi bi-search"></i> Keresés
             </button>
         </div>
    </div>

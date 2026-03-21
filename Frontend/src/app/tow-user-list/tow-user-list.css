@@ -1,15 +1,88 @@
-.tow-list{
-    background-color: rgb(213, 227, 233);
-    border: black 3px solid;
-    overflow-y: auto;
-    padding-right: 10px;
-    height: 81.5vh;
+.tow-list {
+  background-color: rgb(213, 227, 233);
+  border: black 3px solid;
+  overflow-y: auto;
+  padding-right: 10px;
+  height: 81.5vh;
 }
 
-.tow-card{
-    background-color: white;
+.tow-card {
+  background-color: white;
+  overflow: hidden;
 }
 
-.btn-danger{
-    background-color: #7f2d2d;
+.review-user {
+  width: 90px;
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+.review-avatar {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.btn-danger {
+  background-color: #7f2d2d;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+.ratings-section,
+.review-card {
+  overflow: hidden;
+}
+
+.text-break {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.tow-card .btn {
+  white-space: nowrap;
+}
+
+.tow-card h5,
+.tow-card .text-muted,
+.tow-card .fw-bold,
+.tow-card .small {
+  max-width: 100%;
+}
+
+.tow-card img {
+  max-width: 100%;
+  height: auto;
+}
+
+.tow-action {
+  width: 100%;
+  text-align: center;
+  align-items: center;
+}
+
+.request-action .text-warning {
+  color: black;
+  overflow: visible;
+  white-space: normal;
+}
+
+@media (min-width: 768px) {
+  .tow-action {
+    width: auto;
+    margin-left: auto;
+    text-align: right;
+    align-items: flex-end;
+  }
+}
+
+.text-warning{
+    color: rgb(211, 155, 0) !important;
+}
+
+.request-action {
+  margin-left: auto;
+  text-align: right;
+  align-items: flex-end;
 }

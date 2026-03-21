@@ -1,0 +1,14 @@
+.star-button {
+  font-size: 3.5rem;
+  line-height: 1;
+  color: #ced4da;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.star-button:hover {
+  transform: scale(1.08);
+}
+
+.active-star {
+  color: #ffc107;
+}

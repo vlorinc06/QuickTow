@@ -32,7 +32,7 @@ export class TowRequestService {
     return this.http.post<TowRequestPost>(apiUrl,request);
   }
 
-  updateTowRequest(id: number, request: TowRequest){
+  updateTowRequest(id: number, request: TowRequest | Partial<TowRequest>){
     const apiUrl = `http://127.0.0.1:8000/api/towrequests/${id}`
 
     return this.http.put<TowRequest>(apiUrl, request);

@@ -1,4 +1,4 @@
-import { Component, Input, signal, Signal } from '@angular/core';
+import { Component, computed, Input, signal, Signal } from '@angular/core';
 import { TowUser } from '../models/towuser.model';
 import { DecimalPipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
@@ -9,6 +9,9 @@ import { TowRequestService } from '../tow-request-service';
 import { TowRequest, TowRequestPost } from '../models/towrequest.model';
 import { DialogRef } from '@angular/cdk/dialog';
 import { interval, pipe, startWith, Subject, switchMap, takeUntil } from 'rxjs';
+import { TowRequestEndWindow } from '../tow-request-end-window/tow-request-end-window';
+import { ViewRatingsWindow } from '../view-ratings-window/view-ratings-window';
+import { RatingService } from '../rating-service';
 
 @Component({
   selector: 'app-tow-user-list',
@@ -23,20 +26,30 @@ export class TowUserList {
   towRequests = signal<TowRequest[]>([])
   activeUserRequest = signal<TowRequest | null>(null);
   requestDenied = signal<boolean>(false);
-  deniedRequest = signal<TowRequest |null>(null);
+  deniedRequest = signal<TowRequest | null>(null);
+  userConfirming: boolean = false;
+  towUserConfirming: boolean = false;
+  towUserRatings = signal<{ [towUserId: number]: any[] }>({});
+
   private destroy = new Subject<void>();
 
-  constructor(private requestWindow: MatDialog, private towUser: TowUserService, public auth: AuthService, private towRequest: TowRequestService) { }
+  constructor(
+    private dialog: MatDialog,
+    private towUser: TowUserService,
+    public auth: AuthService,
+    private towRequest: TowRequestService,
+    private ratingService: RatingService
+  ) { }
 
   ngOnInit() {
     const userId = this.auth.currentUser()?.id;
     const userType = this.auth.currentUser()?.type;
     if (!userId) return;
 
-    if(userType === "user"){
-    setInterval(() => {
-      this.checkRequests();
-    }, 5000);
+    if (userType === "user") {
+      setInterval(() => {
+        this.checkRequests();
+      }, 5000);
     }
 
     if (this.auth.currentUser()?.type === "user") {
@@ -52,6 +65,13 @@ export class TowUserList {
     console.log(this.towUsers.length)
   }
 
+  averageRatingStars(towUser: TowUser) {
+    const rating = Math.round(towUser.rating);
+
+    return '★'.repeat(rating) + '☆'.repeat(5 - rating)
+  }
+
+
   startPollingRequests() {
     const towUserId = this.auth.currentUser()?.id;
     if (!towUserId) return;
@@ -63,9 +83,23 @@ export class TowUserList {
       }), takeUntil(this.destroy)
     ).subscribe({
       next: (res: TowRequest[]) => {
-        const awaiting = res.filter(request => request.status === 'awaiting response');
-        this.towRequests.set(awaiting);
-        console.log(this.towRequests())
+        const inProgress = res.find(r => r.status === 'in progress');
+
+        let requests: TowRequest[];
+
+        const confirming = res.find(r => r.status === 'confirming')
+
+        if (confirming && !this.towUserConfirming) {
+          this.towUserConfirming = true;
+          this.openEndDialog(confirming);
+        }
+
+        if (inProgress) {
+          requests = [inProgress];
+        } else {
+          requests = res.filter(r => r.status === 'awaiting response');
+        }
+        this.towRequests.set(requests);
       }
     })
 
@@ -73,7 +107,7 @@ export class TowUserList {
 
   openDialog(id: number) {
     this.towUser.selectedTowUser.set(id)
-    const dialogRef = this.requestWindow.open(TowRequestWindow, {
+    const dialogRef = this.dialog.open(TowRequestWindow, {
       width: '1000px',
       maxWidth: '95vw',
       maxHeight: '90vh',
@@ -88,23 +122,65 @@ export class TowUserList {
 
   checkRequests() {
     const userId = this.auth.currentUser()?.id;
-  if (!userId) return;
-  
-  this.towRequest.getTowRequestsByUser(userId).subscribe({
-    next: (res: TowRequest[]) => {
+    const userType = this.auth.currentUser()?.type;
+    if (!userId) return;
 
-      const active = res.find(r =>
-        r.status === 'awaiting response' || r.status === 'in progress'
-      );
+    if (userType === "user") {
+      this.towRequest.getTowRequestsByUser(userId).subscribe({
+        next: (res: TowRequest[]) => {
 
-      const denied = res.find(r => r.status === 'denied');
+          const active = res.find(r =>
+            r.status === 'awaiting response' || r.status === 'in progress'
+          );
 
-      this.towRequests.set(active ? [active] : []);
-      this.auth.isRequesting.set(!!active);
-      this.requestDenied.set(!active && !!denied);
-      this.deniedRequest.set(denied ?? null)
+          const denied = res.find(r => r.status === 'denied');
+
+          const confirming = res.find(r => r.status === 'confirming')
+
+
+          if (confirming && !this.userConfirming) {
+            this.userConfirming = true;
+            this.openEndDialog(confirming);
+          }
+
+          if (!confirming) {
+            this.userConfirming = false; 
+          }
+
+          if(active?.tow_user.id){
+            this.loadTowUserRatings(active.tow_user.id)
+          }
+
+          this.towRequests.set(active ? [active] : []);
+          this.auth.isRequesting.set(!!active);
+          this.requestDenied.set(!active && !!denied);
+          this.deniedRequest.set(denied ?? null)
+        }
+      });
     }
-  });
+    else if (userType === "towUser") {
+      this.towRequest.getTowRequestsByTowUser(userId).subscribe({
+        next: (res: TowRequest[]) => {
+
+          const active = res.find(r =>
+            r.status === 'awaiting response' || r.status === 'in progress'
+          );
+
+          const denied = res.find(r => r.status === 'denied');
+
+          const confirming = res.find(r => r.status === 'confirming')
+
+          if (confirming) {
+            if (this.towUserConfirming === false)
+              this.openEndDialog(confirming)
+            this.towUserConfirming = true
+          }
+
+          this.towRequests.set(active ? [active] : []);
+        }
+      });
+    }
+
 
   }
 
@@ -145,18 +221,73 @@ export class TowUserList {
 
   }
 
-  dismissDeniedRequest(){
+  dismissDeniedRequest() {
     const request = this.deniedRequest();
-    if(!request?.id) return;
+    if (!request?.id) return;
 
-    this.towRequest.updateTowRequest(request.id!,{
+    this.towRequest.updateTowRequest(request.id!, {
       ...request,
       status: 'dismissed'
-    }).subscribe(()=>{
+    }).subscribe(() => {
       this.requestDenied.set(false);
       this.auth.isRequesting.set(false);
       this.checkRequests();
     })
+  }
+
+  completeRequest(id: number, request: TowRequest) {
+    const updated = {
+      ...request,
+      status: 'confirming'
+    }
+
+    this.towRequest.updateTowRequest(id, updated).subscribe(() => {
+      this.towUserConfirming = true
+      this.openEndDialog(request)
+    });
+
+  }
+
+  openEndDialog(request: TowRequest) {
+    const userType = this.auth.currentUser()?.type;
+    const dialogRef = this.dialog.open(TowRequestEndWindow, {
+      width: '820px',
+      maxWidth: '95vw',
+      disableClose: true
+    })
+
+    dialogRef.componentInstance.request = request;
+    dialogRef.componentInstance.isTowUser = userType === "user" ? false : true;
+  }
+
+  openRatings(towUserId: number) {
+    const dialogRef = this.dialog.open(ViewRatingsWindow, {
+      width: '820px',
+      maxWidth: '95vw',
+      disableClose: false
+    })
+
+    dialogRef.componentInstance.selectedTowUser = towUserId;
+
+  }
+
+  loadTowUserRatings(towUserId: number) {
+    this.ratingService.getRatingsByTowUser(towUserId).subscribe({
+      next: (ratings) => {
+        this.towUserRatings.update(current => ({
+          ...current,
+          [towUserId]: ratings
+        }));
+      }
+    });
+  }
+
+  getTowUserRatings(towUserId: number) {
+    return this.towUserRatings()[towUserId] || [];
+  }
+
+  getStars(rating: number): string {
+    return '★'.repeat(rating) + '☆'.repeat(5 - rating);
   }
 
   ngOnDestroy() {

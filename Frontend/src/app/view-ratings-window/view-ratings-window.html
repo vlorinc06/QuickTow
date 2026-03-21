@@ -1,0 +1,54 @@
+<div class="container-fluid p-4 p-md-5 bg-light rounded-4 rating-dialog d-flex flex-column">
+  <div class="text-center mb-4">
+    <h2 class="fw-bold mb-2">{{ratings()[0].tow_user.last_name}} {{ratings()[0].tow_user.first_name}} értékelései</h2>
+
+    <div class="fs-2 text-warning lh-1 mb-2">
+      {{averageRatingStars()}}
+    </div>
+
+    <div class="fs-5">
+      {{ ratings()[0].tow_user.rating }} ({{ ratings()[0].tow_user.rating_count }} értékelés)
+    </div>
+  </div>
+
+  <div class="bg-secondary-subtle rounded-4 py-3 py-md-4 mb-4 reviews-wrapper">
+  
+  <div class="reviews-scroll px-3 px-md-4">
+    @for (rating of ratings(); track $index) {
+      <div class="card border-0 rounded-4 mb-4 review-card">
+        <div class="card-body">
+          <div class="d-flex align-items-start gap-3">
+            <div class="text-center review-user">
+              <div class="review-avatar mx-auto mb-2">
+                <i class="bi bi-person-circle"></i>
+              </div>
+              <div class="fw-semibold small lh-sm">
+                {{ rating.user.last_name }} {{rating.user.first_name}}
+              </div>
+            </div>
+
+            <div class="flex-grow-1">
+              <div class="text-warning fs-5 lh-1 mb-2">
+                {{ getStars(rating.rating) }}
+              </div>
+
+              <div class="text-dark text-break">
+                {{ rating.text }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+  <div class="text-center">
+    <button
+      type="button"
+      class="btn btn-danger px-5 py-2  fw-semibold rounded-3 back-btn"
+      (click)="closeDialog()">
+      Vissza
+    </button>
+  </div>
+</div>

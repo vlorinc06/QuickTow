@@ -1,27 +1,46 @@
-<div class="container-fluid  w-100 tow-list rounded-4 pt-3">
+<div class="container-fluid w-100 tow-list rounded-4 pt-3">
     @if(auth.currentUser()?.type == "user" && !auth.isRequesting() && !requestDenied())
     {
+    @if(towUsers.length == 0)
+    {
+    <p class="text-center text-muted mt-5">Az elérhető, közelben lévő autómentők itt fognak megjelenni.</p>
+    <p class="text-center text-muted mt-2"><i class="bi bi-map-fill"></i> Használd a térképet a kereséshez.</p>
+    }
+    @else{
     @for(towUser of towUsers; track $index) {
-    <div class="tow-card d-flex align-items-center p-3 mb-3 shadow-sm rounded-4">
+    <div class="tow-card d-flex flex-row flex-wrap align-items-center p-3 mb-3 shadow-sm rounded-4 gap-3">
 
-        <div class="me-3 text-center">
+        <div class="text-center flex-shrink-0">
             <img src="../../assets/images/truck.png" alt="truck" style="width: 80px;">
             <div class="fw-bold mt-2">{{towUser.price_per_km}} Ft / Km</div>
         </div>
 
-        <div class="flex-grow-1">
-            <h5 class="mb-0 fw-bold">{{towUser.last_name}} {{towUser.first_name}}</h5>
-            <div class="text-muted small">{{towUser.username}}</div>
-            <div class="my-1">
-                <span class="text-warning">★★★★★</span>
-                <span class="small">({{towUser.rating_count}})</span> <br>
-                <a href="#" class="small text-decoration-underline text-dark">Értékelések</a>
-            </div>
+        <div class="flex-grow-1 min-w-0 text-start">
+            <h5 class="mb-0 fw-bold text-break">
+                {{towUser.last_name}} {{towUser.first_name}}
+            </h5>
+            <div class="text-muted small text-break">{{towUser.username}}</div>
 
+            <div class="my-1">
+                <span class="text-warning">{{averageRatingStars(towUser)}}</span>
+                <span class="small">({{towUser.rating_count}})</span>
+                <br>
+                @if(towUser.id && towUser.rating_count > 0)
+                {
+                <button type="button" class="btn btn-link p-0 small text-decoration-underline text-dark"
+                    (click)="openRatings(towUser.id)">
+                    Értékelések
+                </button>
+                }
+            </div>
         </div>
 
-        <div class="text-center">
-            <div class="small mb-2"><i class="bi bi-geo-alt"></i> ~{{towUser.distance | number:'1.0-0'}} km-re</div>
+        <div class="tow-action flex-shrink-0 d-flex flex-column align-items-center">
+            <div class="small mb-2 text-break">
+                <i class="bi bi-geo-alt"></i>
+                ~{{towUser.distance | number:'1.0-0'}} km-re
+            </div>
+
             @if(towUser.id){
             <button class="btn btn-dark btn-sm rounded-pill px-3" (click)="openDialog(towUser.id)">
                 Vontatás kérése <i class="bi bi-chevron-right"></i>
@@ -32,8 +51,10 @@
     </div>
     }
     }
+
+    }
     @else if(auth.currentUser()?.type == "user" && requestDenied()){
-    <div class="tow-card d-flex flex-column align-items-center p-4 mb-3 shadow-sm rounded-4">
+    <div class="tow-card d-flex flex-column align-items-center p-4 mb-3 shadow-sm rounded-4 text-center">
 
         <div class="text-danger fw-bold mb-2">
             A kérést elutasította az autómentő.
@@ -47,79 +68,168 @@
     }
     @else if(auth.currentUser()?.type == "user" && auth.isRequesting()){
     @for(request of towRequests(); track $index) {
-    <div class="tow-card d-flex align-items-center p-3 mb-3 shadow-sm rounded-4">
+    <div class="tow-card p-3 mb-3 shadow-sm rounded-4">
+        <div class="d-flex flex-row flex-wrap align-items-center gap-3">
 
-        <div class="me-3 text-center">
-            <img src="../../assets/images/truck.png" alt="truck" style="width: 80px;">
-            <div class="fw-bold mt-2">{{request.price}} Ft</div>
-        </div>
+            <div class="d-flex flex-row flex-wrap align-items-center gap-3 flex-grow-1 min-w-0">
+                <div class="text-center flex-shrink-0">
+                    <img src="../../assets/images/truck.png" alt="truck" style="width: 80px;">
+                    <div class="fw-bold mt-2">{{ request.price }} Ft</div>
+                </div>
 
-        <div class="flex-grow-1">
-            <h5 class="mb-0 fw-bold">{{request.tow_user.last_name}} {{request.tow_user.first_name}}</h5>
-            <div class="text-muted small">{{request.tow_user.username}}</div>
-        </div>
+                <div class="flex-grow-1 min-w-0 text-start">
+                    <h5 class="mb-0 fw-bold text-break">
+                        {{ request.tow_user.last_name }} {{ request.tow_user.first_name }}
+                    </h5>
 
-        @if(request.status == "awaiting response"){
+                    <div class="text-muted small mb-1 text-break">
+                        {{ request.tow_user.username }}
+                    </div>
 
-        <div class="d-flex flex-column align-items-center gap-2">
-
-            <div class="small text-muted text-warning">
-                Várakozás az autómentő válaszára...
+                    <div class="d-flex align-items-center gap-2 mt-2 flex-wrap min-w-0">
+                        <i class="bi bi-telephone-fill fs-5 flex-shrink-0"></i>
+                        <div class="fw-bold fs-5 text-break">
+                            {{ request.tow_user.phone_number }}
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            @if(request.id)
-            {
-            <button class="btn btn-danger text-light btn-sm rounded-pill px-3"
-                (click)="cancelRequest(request.id, request)">
-                Kérés visszamondása
-            </button>
+            @if(request.status == "awaiting response"){
+            <div class="request-action request-action-warning d-none d-lg-flex flex-column gap-2 flex-shrink-0">
+                <div class="small text-warning ">
+                    Várakozás az autómentő válaszára...
+                </div>
+
+                @if(request.id) {
+                <button class="btn btn-danger text-light btn-sm rounded-3 px-3"
+                    (click)="cancelRequest(request.id, request)">
+                    Kérés visszamondása
+                </button>
+                }
+            </div>
             }
 
+            @else if (request.status == "in progress")
+            {
+            <div class="request-action request-action-success d-none d-lg-flex flex-column gap-2 flex-shrink-0">
+                <div class=" fw-semibold text-success">
+                    Vontatás folyamatban
+                </div>
+
+
+
+            </div>
+            }
         </div>
 
-        }
 
 
+        <div class="ratings-section mt-4 p-3 bg-secondary-subtle rounded-4">
+            <h4 class="fw-bold mb-3">Autómentő Értékelései</h4>
+
+            @if(request.tow_user.rating_count > 0){
+            @for(rating of getTowUserRatings(request.tow_user.id!); track $index) {
+            <div
+                class="review-card d-flex flex-column flex-md-row align-items-lg-start align-items-center gap-3 p-3 mb-3 bg-light rounded-4">
+                <div class="text-center text-md-start review-user flex-shrink-0">
+                    <div class="review-avatar mx-auto mb-2">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <div class="fw-semibold small lh-sm text-break">
+                        {{ rating.user.last_name }} {{ rating.user.first_name }}
+                    </div>
+                </div>
+
+                <div class="flex-grow-1 min-w-0">
+                    <div class="text-warning fs-5 lh-1 mb-2 d-flex justify-content-md-start justify-content-center">
+                        {{ getStars(rating.rating) }}
+                    </div>
+
+                    <div class="text-dark text-break">
+                        {{ rating.text }}
+                    </div>
+                </div>
+            </div>
+            }
+            }
+            @else {
+            <div class="text-muted">Még nincs értékelés.</div>
+            }
+        </div>
     </div>
     }
     }
     @else if(auth.currentUser()?.type == "towUser"){
+    @if(towRequests().length == 0)
+    {
+    <p class="text-center text-muted mt-5">A bejövő vontatási kérések itt fognak megjelenni.</p>
+    <p class="text-center text-muted mt-2"><i class="bi bi-geo-alt-fill"></i> A helymeghatározást tartsd bekapcsolva!</p>
+    }
     @for(request of towRequests(); track $index) {
-    <div class="tow-card d-flex align-items-center p-3 mb-3 shadow-sm rounded-4">
+    <div class="tow-card d-flex flex-row flex-wrap align-items-center justify-content-center justify-content-md-start p-3 mb-3 shadow-sm rounded-4 gap-3 ">
 
-        <div class="me-3 text-center">
+        <div class="text-center flex-shrink-0">
             <img src="../../assets/images/truck.png" alt="truck" style="width: 80px;">
             <div class="fw-bold mt-2">{{request.price}} Ft</div>
         </div>
 
-        <div class="flex-grow-1">
-            <h5 class="mb-0 fw-bold">{{request.user.last_name}} {{request.user.first_name}}</h5>
-            <div class="text-muted small">{{request.user.username}}</div>
+        <div class="flex-grow-1 min-w-0 text-start">
+            <h5 class="mb-0 fw-bold text-break text-center text-md-start">
+                {{request.user.last_name}} {{request.user.first_name}}
+            </h5>
+
+            <div class="text-muted small text-break mb-1 text-center text-md-start">
+                {{request.user.username}}
+            </div>
+
+            <div class="d-flex align-items-center gap-2 mt-2 flex-wrap min-w-0">
+                <i class="bi bi-telephone-fill fs-6 flex-shrink-0"></i>
+                <div class="fw-semibold text-break">
+                    {{ request.user.phone_number }}
+                </div>
+            </div>
+
+            @if(request.vehicle){
+            <div class="d-flex align-items-center gap-2 mt-2 flex-wrap min-w-0">
+                <i class="bi bi-car-front-fill fs-5 flex-shrink-0"></i>
+                <div class="text-break">
+                    {{ request.vehicle.brand }} {{ request.vehicle.model }}
+                    @if(request.vehicle.license_plate){
+                    <span class="text-muted">({{ request.vehicle.license_plate }})</span>
+                    }
+                </div>
+            </div>
+            }
         </div>
 
         @if(request.status == "awaiting response"){
-
-        <div class="d-flex flex-column align-items-center gap-2">
-            <div>
-                @if(request.id)
-                {
-                <button class="btn btn-danger text-light btn-sm rounded-pill px-3 mx-2"
-                    (click)="denyRequest(request.id, request)">
-                    Kérés elutasítása
-                </button>
-                <button class="btn btn-success text-light btn-sm rounded-pill px-3"
-                    (click)="acceptRequest(request.id, request)">
-                    Kérés elfogadás
-                </button>
-                }
-            </div>
+        <div class="tow-action flex-shrink-0 d-flex flex-column flex-sm-row gap-2">
+            @if(request.id)
+            {
+            <button class="btn btn-danger text-light btn-sm rounded-pill px-3"
+                (click)="denyRequest(request.id, request)">
+                Kérés elutasítása
+            </button>
+            <button class="btn btn-success text-light btn-sm rounded-pill px-3"
+                (click)="acceptRequest(request.id, request)">
+                Kérés elfogadása
+            </button>
+            }
         </div>
-
         }
 
-
+        @else if (request.status == "in progress")
+        {
+        @if(request.id){
+        <div class="tow-action flex-shrink-0 d-flex flex-column">
+            <button class="btn btn-success text-light rounded-pill px-3" (click)="completeRequest(request.id, request)">
+                Vontatás befejezése
+            </button>
+        </div>
+        }
+        }
     </div>
     }
     }
-
 </div>

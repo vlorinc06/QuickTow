@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, effect, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, effect, EventEmitter, NgZone, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
 import { LeafletMapService } from '../leaflet-map-service';
@@ -13,6 +13,9 @@ import { C, F } from '@angular/cdk/keycodes';
 import { TowRequestService } from '../tow-request-service';
 import { TowRequest } from '../models/towrequest.model';
 import { interval, startWith, Subject, switchMap, takeUntil } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { TowRequestWindow } from '../tow-request-window/tow-request-window';
+import { ViewRatingsWindow } from '../view-ratings-window/view-ratings-window';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
@@ -47,7 +50,9 @@ export class LeafletMap implements OnInit {
   selectedTowUserId?: number;
 
   private routeControl?: L.Routing.Control
-  private activeRequestRoute?: L.Routing.Control;
+
+  private routedInProgressRequestId?: number;
+  private inProgressRouteControl?: L.Routing.Control;
 
   @Output() towUsersOut = new EventEmitter<TowUser[]>();
 
@@ -57,26 +62,21 @@ export class LeafletMap implements OnInit {
     private towRequestService: TowRequestService,
     public auth: AuthService,
     public user: UserService,
-    private locationTracking: LocationTrackingService
+    private locationTracking: LocationTrackingService,
+    private dialog: MatDialog,
+    private ngZone: NgZone
   ) {
     effect(() => {
       const selectedId = this.towUserService.selectedTowUser();
-      const isRequesting = this.auth.isRequesting()
-      if (selectedId != null) {
-        if (this.towMarkers.has(selectedId)) {
-          this.keepOnlySelectedMarker(selectedId);
-          this.removePopupFromMarker(selectedId)
-        }
-        else {
-          this.loadSelectedTowUserMarkers(selectedId);
-        }
+      const isRequesting = this.auth.isRequesting();
 
+      if (selectedId != null && this.towMarkers.has(selectedId)) {
+        this.keepOnlySelectedMarker(selectedId);
+        this.removePopupFromMarker(selectedId);
       }
 
-      if (isRequesting === false && this.towUserService.selectedTowUser()) {
-        this.towMarkers.forEach(marker => this.map.removeLayer(marker));
-        this.towMarkers.clear();
-      }
+
+
     })
 
     effect(() => {
@@ -111,15 +111,50 @@ export class LeafletMap implements OnInit {
     if (!userId) return;
 
     if (userType === "user") {
-      this.towRequestService.getTowRequestsByUser(userId).subscribe({
-        next: (res) => {
-          const activeRequest = (res.find(r => r.status === 'awaiting response'));
-          if (activeRequest?.tow_user.id) {
+      interval(5000).pipe(
+        startWith(0),
+        switchMap(() => this.towRequestService.getTowRequestsByUser(userId)),
+        takeUntil(this.destroy)
+      ).subscribe({
+        next: (requests) => {
+          // 1. Look for an active request
+          const activeRequest = requests.find(
+            r => r.status === 'awaiting response' || r.status === 'in progress'
+          );
+
+          // 2. If NO active request is found...
+          if (!activeRequest) {
+            // ONLY clear the map if we were previously tracking a specific selected tow user.
+            // This allows markers from the "Search" button to stay on the map.
+            if (this.towUserService.selectedTowUser() !== null) {
+              this.towUserService.selectedTowUser.set(null);
+              this.towMarkers.forEach(marker => this.map.removeLayer(marker));
+              this.towMarkers.clear();
+            }
+          }
+          // 3. If an active request IS found and it has a valid tow_user...
+          else if (activeRequest.tow_user?.id) {
+            // This fixes the "undefined" error: 
+            // We already checked activeRequest and tow_user exist in the 'else if'
             this.towUserService.selectedTowUser.set(activeRequest.tow_user.id);
-            this.loadSelectedTowUserMarkers(activeRequest.tow_user.id);
+
+            this.loadSelectedTowUserMarker(
+              activeRequest.tow_user.id,
+              activeRequest.status
+            );
+          }
+
+          // 4. Handle Route logic
+          const inProgressRequest = requests.find(r => r.status === 'in progress');
+          if (inProgressRequest) {
+            if (this.routedInProgressRequestId !== inProgressRequest.id) {
+              // this.drawInProgressRoute(inProgressRequest);
+            }
+          } else {
+            this.clearInProgressRoute();
           }
         }
-      })
+      });
     }
     else if (userType === "towUser") {
       const location = this.locationTracking.currentLocation();
@@ -135,9 +170,37 @@ export class LeafletMap implements OnInit {
         takeUntil(this.destroy)
       ).subscribe({
         next: (requests) => {
-          const visibleRequests = requests.filter(r => r.status === 'awaiting response' || r.status === 'in progress');
+          // --- ADDED THIS LINE ---
+          // Filter to only show markers for active or pending requests
+          const activeRequests = requests.filter(r => r.status === 'awaiting response' || r.status === 'in progress');
+          this.loadTowRequestMarkers(activeRequests);
+          // -----------------------
 
-          this.loadTowRequestMarkers(visibleRequests);
+          const visibleRequests = requests.find(r => r.status === 'awaiting response' || r.status === 'in progress');
+
+          if (!visibleRequests?.tow_user?.id) {
+            if (this.towUserService.selectedTowUser() !== null) {
+              this.towUserService.selectedTowUser.set(null);
+              this.towMarkers.forEach(marker => this.map.removeLayer(marker));
+              this.towMarkers.clear();
+            }
+            return;
+          }
+
+          this.towUserService.selectedTowUser.set(visibleRequests.tow_user.id);
+          this.loadSelectedTowUserMarker(
+            visibleRequests.tow_user.id,
+            visibleRequests.status
+          );
+
+          const inProgressRequest = requests.find(r => r.status === 'in progress')
+          if (inProgressRequest) {
+            if (this.routedInProgressRequestId !== inProgressRequest.id) {
+              //this.drawInProgressRoute(inProgressRequest);
+            }
+          } else {
+            this.clearInProgressRoute();
+          }
         }
       })
     }
@@ -216,17 +279,47 @@ export class LeafletMap implements OnInit {
     })
   }
 
-
-
   towIcon = L.icon({
     iconUrl: '../../assets/images/truck.png',
-    iconSize: [45, 22]
+    iconSize: [54, 27]
+  })
+
+
+  towIconPending = L.icon({
+    iconUrl: '../../assets/images/truck_pending.png',
+    iconSize: [54, 27]
+  })
+
+  towIconActive = L.icon({
+    iconUrl: '../../assets/images/truck_active.png',
+    iconSize: [54, 27]
+  })
+
+  towIconDenied = L.icon({
+    iconUrl: '../../assets/images/truck_denied.png',
+    iconSize: [54, 27]
   })
 
   pickupIcon = L.icon({
-    iconUrl: '../../assets/images/car_icon.png',
+    iconUrl: '../../assets/images/car_icon_map.png',
     iconSize: [30, 22]
   })
+
+  private getTowIconByStatus(status?: string): L.Icon {
+    if (status === 'awaiting response') {
+      return this.towIconPending;
+    }
+
+    if (status === 'in progress') {
+      return this.towIconActive;
+    }
+
+    if (status === 'denied') {
+      return this.towIconDenied;
+    }
+
+    return this.towIcon;
+  }
 
   private createMarkerWithPopup(
     lat: number,
@@ -234,6 +327,7 @@ export class LeafletMap implements OnInit {
     icon: L.Icon,
     getPopupHtml: () => string,
     getRouteTo: () => L.LatLngExpression | null,
+    allowRouting: boolean = false,
     onPopupOpen?: (popupElement: HTMLElement) => void
   ): L.Marker {
     const marker = L.marker([lat, lng], { icon }).addTo(this.map);
@@ -241,6 +335,11 @@ export class LeafletMap implements OnInit {
     marker.bindPopup(getPopupHtml());
 
     marker.on('click', () => {
+      marker.setPopupContent(getPopupHtml());
+      marker.openPopup();
+
+      if (!allowRouting) return;
+
       const routeTo = getRouteTo();
       if (!routeTo) return;
 
@@ -266,9 +365,6 @@ export class LeafletMap implements OnInit {
       };
 
       this.routeControl = L.routing.control(options).addTo(this.map);
-
-      marker.setPopupContent(getPopupHtml());
-      marker.openPopup();
     });
 
     marker.on('popupopen', () => {
@@ -322,10 +418,27 @@ export class LeafletMap implements OnInit {
           const marker = this.createMarkerWithPopup(
             towUser.latitude,
             towUser.longitude,
-            this.towIcon,
+            this.getTowIconByStatus(),
             () => this.mapService.popupHtml(towUser),
-            () => this.userMarker?.getLatLng() ?? null
+            () => this.userMarker?.getLatLng() ?? null,
+            true,
+            (popupElement) => {
+              setTimeout(() => {
+                const requestBtn = popupElement.querySelector('.tow-request-btn');
+
+                requestBtn?.addEventListener('click', (e) => {
+                  if (towUser.id != null) {
+                    this.openDialog(towUser.id!);
+                  }
+                })
+
+
+              }, 0)
+
+            }
           );
+
+
 
           if (towUser.id != null) {
             this.towMarkers.set(towUser.id, marker);
@@ -375,23 +488,27 @@ export class LeafletMap implements OnInit {
     }
   }
 
-  loadSelectedTowUserMarkers(towUserId: number) {
-    this.towUserService.getTowUserById(towUserId).subscribe({
-      next: (towUser) => {
-        console.log("loaded tow user:", towUser);
+  loadSelectedTowUserMarker(towUserId: number, requestStatus?: string) {
+    const user = this.auth.currentUser()?.type
+    if (user === "user") {
+      this.towUserService.getTowUserById(towUserId).subscribe({
+        next: (towUser) => {
+          console.log("loaded tow user:", towUser);
 
-        if (towUser.latitude == null || towUser.longitude == null) {
-          return
+          if (towUser.latitude == null || towUser.longitude == null) {
+            return
+          }
+
+          this.towMarkers.forEach(marker => this.map.removeLayer(marker));
+          this.towMarkers.clear();
+
+          const marker = L.marker([towUser.latitude, towUser.longitude], { icon: this.getTowIconByStatus(requestStatus) }).addTo(this.map);
+
+          this.towMarkers.set(towUserId, marker);
         }
+      })
+    }
 
-        this.towMarkers.forEach(marker => this.map.removeLayer(marker));
-        this.towMarkers.clear();
-
-        const marker = L.marker([towUser.latitude, towUser.longitude], { icon: this.towIcon }).addTo(this.map);
-
-        this.towMarkers.set(towUserId, marker);
-      }
-    })
   }
 
   clearRequestMarkers() {
@@ -433,12 +550,17 @@ export class LeafletMap implements OnInit {
             ? L.latLng(currentLocation.lat, currentLocation.lng)
             : null;
         },
+        false
+        ,
         (popupElement) => {
-          const acceptBtn = popupElement.querySelector('.tow-accept-btn');
-          const denyBtn = popupElement.querySelector('.tow-deny-btn');
+          setTimeout(() => {
+            const acceptBtn = popupElement.querySelector('.tow-accept-btn');
+            const denyBtn = popupElement.querySelector('.tow-deny-btn');
 
-          acceptBtn?.addEventListener('click', () => this.acceptRequestFromMap(request));
-          denyBtn?.addEventListener('click', () => this.denyRequestFromMap(request));
+            acceptBtn?.addEventListener('click', () => this.acceptRequestFromMap(request));
+            denyBtn?.addEventListener('click', () => this.denyRequestFromMap(request));
+          }, 0);
+
         }
       );
 
@@ -471,6 +593,64 @@ export class LeafletMap implements OnInit {
       this.map.closePopup();
     });
   }
+
+  private drawInProgressRoute(request: TowRequest) {
+    if (
+      request.id == null ||
+      request.pickup_lat == null ||
+      request.pickup_long == null ||
+      request.dropoff_lat == null ||
+      request.dropoff_long == null
+    ) {
+      return;
+    }
+
+    const towUserLat = request.tow_user.latitude;
+    const towUserLng = request.tow_user.longitude;
+
+    if (towUserLat && towUserLng) {
+      const options: any = {
+        waypoints: [
+          L.latLng(towUserLat, towUserLng),
+          L.latLng(request.pickup_lat, request.pickup_long),
+          L.latLng(request.dropoff_lat, request.dropoff_long)
+        ],
+        addWaypoints: false,
+        fitSelectedRoutes: true,
+        show: false,
+        showAlternatives: false,
+        lineOptions: {
+          extendToWaypoints: true,
+          missingRouteTolerance: 0
+        },
+        createMarker: () => null
+      };
+
+      this.inProgressRouteControl = L.routing.control(options).addTo(this.map);
+      console.log("in progress route calculated")
+      this.routedInProgressRequestId = request.id;
+    }
+  }
+
+  private clearInProgressRoute() {
+    if (this.inProgressRouteControl) {
+      this.map.removeControl(this.inProgressRouteControl);
+      this.inProgressRouteControl = undefined;
+    }
+
+    this.routedInProgressRequestId = undefined;
+  }
+
+  openDialog(id: number) {
+    this.towUserService.selectedTowUser.set(id)
+    const dialogRef = this.dialog.open(TowRequestWindow, {
+      width: '1000px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      disableClose: true
+    })
+  }
+
 
   ngOnDestroy() {
     this.destroy.next();
