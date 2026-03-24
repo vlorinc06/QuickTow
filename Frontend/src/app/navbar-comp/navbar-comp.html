@@ -1,13 +1,45 @@
 <nav class="navbar">
-    <div class="container-fluid d-flex">
+  <div class="container-fluid d-flex align-items-center">
 
-        <img src="../../assets/images/logo.png" class="img-fluid" style="max-height: 60px;" />
+    <img
+      src="../../assets/images/logo.png"
+      class="img-fluid navbar-logo"
+      style="max-height: 60px;"
+      (click)="openHome()"
+    />
 
-        <button (click)="openModel()" class="registry-back-btn">Regisztráció</button>
+    <div class="div-buttons d-flex ms-auto align-items-center">
 
+      <ng-container *ngIf="!isLoggedIn()">
+        <button (click)="openRegister()" class="registry-back-btn me-2">
+          Regisztráció
+        </button>
 
-        <!-- <app-registry-comp *ngIf="isModelOpen" (close)="closeModel()">
-        </app-registry-comp> -->
+        <button (click)="openLogin()" class="registry-back-btn me-2">
+          Bejelentkezés
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="isLoggedIn()">
+        <button type="button" class="profile-trigger" (click)="openProfile()">
+          <div class="profile-mini-icon">
+            <div class="mini-head"></div>
+            <div class="mini-body"></div>
+          </div>
+          <span>{{ username() }}</span>
+        </button>
+      </ng-container>
 
     </div>
+  </div>
 </nav>
+
+<app-registry-comp
+  *ngIf="isRegisterOpen"
+  (close)="closeRegister()">
+</app-registry-comp>
+
+<app-login-comp
+  *ngIf="isLoginOpen"
+  (close)="closeLogin()">
+</app-login-comp>

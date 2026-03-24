@@ -76,8 +76,10 @@ class TowUserController extends Controller
             'last_name',
             'first_name',
             'username',
+            'password',
             'email',
             'phone_number',
+            'price_per_km',
             'latitude',
             'longitude'
         ]));
@@ -166,4 +168,34 @@ class TowUserController extends Controller
         }
         return response("No tow users found withing the given radius",204);
     }
+
+    public function login(Request $request)
+{
+    $validator = Validator::make(
+        $request->all(),
+        [
+            'username' => 'required|string',
+            'password' => 'required|string'
+        ]
+    );
+
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 400);
+    }
+
+    $user = TowUser::where('username', $request->username)->first();
+
+    if (is_null($user)) {
+        return response()->json(["message" => "User not found"], 404);
+    }
+
+    if (!Hash::check($request->password, $user->password)) {
+        return response()->json(["message" => "Wrong password"], 401);
+    }
+
+    return response()->json([
+        "message" => "Login successful",
+        "user" => $user
+    ], 200);
+}
 }

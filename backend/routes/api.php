@@ -14,6 +14,7 @@ Route::get('/users/id/{id}',[UserController::class,'getById']);
 Route::post('/users',[UserController::class,'store']);
 Route::put('/users/{id}',[UserController::class,'update']);
 Route::delete('/users/{id}',[UserController::class,'destroy']);
+Route::post('/users/login', [UserController::class, 'login']);
 
 
 Route::get('/vehicles',[VehicleController::class,'index']);
@@ -31,6 +32,7 @@ Route::get('/towusers/minrating/{rating}',[TowUserController::class,'getMinRatin
 Route::post('/towusers',[TowUserController::class,'store']);
 Route::put('/towusers/{id}',[TowUserController::class,'update']);
 Route::delete('/towusers/{id}',[TowUserController::class,'destroy']);
+Route::post('/towusers/login', [TowUserController::class, 'login']);
 
 
 Route::get('/towrequests',[TowRequestController::class,'index']);

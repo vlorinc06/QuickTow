@@ -1,45 +1,104 @@
-:host{
-    display: block;
-    height: 100%;
+:host {
+  display: block;
+  height: 100%;
 }
 
-#map{
-    height: 80vh;
-    width: 100%;
-    min-height: 300px;
+#map {
+  height: 80vh;
+  width: 100%;
+  min-height: 300px;
 }
 
-.map-wrap{
-    position: relative;
-    width: 100%;
-    min-height: 0;
-    border: black 3px solid;
+.map-shell {
+  position: relative;
 }
 
-.map-btn{
-    z-index: 1000;
+.map-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: black 3px solid;
 }
 
-.btn{
-    background-color: #2f506b;
-    border: black solid 2px;
+.map-content {
+  transition: filter 0.25s ease, opacity 0.25s ease;
 }
 
-.input-group{
-    border: black solid 2px;
-    border-radius: 5px;
+.map-content.blurred {
+  filter: blur(6px);
+  pointer-events: none;
+  user-select: none;
 }
 
-.input-group .btn{
-    border: 0px;
+.map-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.12);
 }
 
-.map-bar{
-    position: absolute;
-    background-color: #1f2f3d;
-    z-index: 1000;
-    width: 100%;
-    height: auto;
+.overlay-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay-btn {
+  min-width: 220px;
+  height: 58px;
+  padding: 0 24px;
+  border: 2px solid #1f3146;
+  border-radius: 16px;
+  background: #22364d;
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.overlay-btn:hover {
+  background: #1b2d41;
+  transform: translateY(-1px);
+}
+
+.map-btn {
+  z-index: 1000;
+}
+
+.btn {
+  background-color: #2f506b;
+  border: black solid 2px;
+}
+
+.input-group {
+  border: black solid 2px;
+  border-radius: 5px;
+}
+
+.input-group .btn {
+  border: 0;
+}
+
+.map-bar {
+  position: absolute;
+  background-color: #1f2f3d;
+  z-index: 1000;
+  width: 100%;
+  height: auto;
+}
+
+.tow-marker {
+  border-radius: 10px;
+  display: inline-block;
+  padding: 2px;
 }
 
 .tow-marker img {
@@ -47,13 +106,6 @@
   height: auto;
 }
 
-/* base */
-.tow-marker {
-  border-radius: 10px;
-  display: inline-block;
-  padding: 2px;
-}
-
-.pickup-marker{
-    filter: drop-shadow(0 0 6px orange);
+.pickup-marker {
+  filter: drop-shadow(0 0 6px orange);
 }

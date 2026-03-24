@@ -1,0 +1,83 @@
+<div class="profile-page">
+  <div class="profile-header">
+    <div class="profile-avatar">
+      <div class="avatar-head"></div>
+      <div class="avatar-body"></div>
+    </div>
+
+    <div class="profile-header-text">
+      <div class="name-row">
+        <h1>{{ fullName() }}</h1>
+        <span>
+          {{ isTowUser() ? 'Autómentő fiók' : 'Felhasználói fiók' }}
+        </span>
+      </div>
+
+      <h3>{{ username() }}</h3>
+
+      <button class="logout-btn" (click)="logout()">Kijelentkezés</button>
+    </div>
+  </div>
+
+  <div class="profile-content">
+    <div class="side-menu">
+      <ng-container *ngIf="!isTowUser()">
+        <button class="menu-btn" (click)="selectTab('settings')">
+          Beállítások <span>›</span>
+        </button>
+
+        <button class="menu-btn" (click)="selectTab('activeRequests')">
+          Vontatási kérések <span>›</span>
+        </button>
+
+        <button class="menu-btn" (click)="selectTab('reviews')">
+          Értékelések <span>›</span>
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="isTowUser()">
+        <button class="menu-btn" (click)="selectTab('incomingRequests')">
+          Bejövő vontatási kérések <span>›</span>
+        </button>
+
+        <button class="menu-btn" (click)="selectTab('completedRequests')">
+          Befejezett vontatások <span>›</span>
+        </button>
+
+        <button class="menu-btn" (click)="selectTab('settings')">
+          Beállítások <span>›</span>
+        </button>
+
+        <button class="menu-btn" (click)="selectTab('reviews')">
+          Értékelések <span>›</span>
+        </button>
+      </ng-container>
+    </div>
+
+    <div class="main-panel">
+      <ng-container [ngSwitch]="activeTab()">
+        <app-user-settings-comp *ngSwitchCase="'settings'"></app-user-settings-comp>
+
+        <div *ngSwitchCase="'activeRequests'" class="empty-box">
+          Itt jelenhetnek meg a vontatási kéréseid.
+        </div>
+
+        <div *ngSwitchCase="'incomingRequests'" class="empty-box">
+          Itt jelenhetnek meg a bejövő vontatási kérések.
+        </div>
+
+        <div *ngSwitchCase="'completedRequests'" class="empty-box">
+          Itt jelenhetnek meg a befejezett vontatások.
+        </div>
+
+        <div *ngSwitchCase="'reviews'" class="empty-box">
+          Itt jelenhetnek meg az értékeléseid.
+        </div>
+
+        <div *ngSwitchDefault class="empty-box">
+          Válassz egy menüpontot.
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

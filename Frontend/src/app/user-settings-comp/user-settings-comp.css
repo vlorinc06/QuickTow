@@ -1,0 +1,67 @@
+.settings-wrapper {
+  padding: 20px;
+}
+
+.settings-card {
+  max-width: 750px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.settings-input {
+  flex: 1;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: white;
+  font-size: 14px;
+}
+
+.save-btn {
+  height: 40px;
+  padding: 0 18px;
+  background: #2c3f55;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.save-btn:hover {
+  background: #243447;
+}
+
+.settings-divider {
+  margin: 25px 0;
+  border: none;
+  height: 1px;
+  background: rgba(0,0,0,0.15);
+}
+
+.delete-container {
+  margin-top: 30px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.delete-btn {
+  height: 40px;
+  padding: 0 18px;
+  background: #a42d2d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background: #8d2323;
+}

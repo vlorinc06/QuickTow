@@ -105,4 +105,34 @@ class UserController extends Controller
         }
         return response()->json($user,200);
     }
+
+    public function login(Request $request)
+{
+    $validator = Validator::make(
+        $request->all(),
+        [
+            'username' => 'required|string',
+            'password' => 'required|string'
+        ]
+    );
+
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 400);
+    }
+
+    $user = User::where('username', $request->username)->first();
+
+    if (is_null($user)) {
+        return response()->json(["message" => "User not found"], 404);
+    }
+
+    if (!Hash::check($request->password, $user->password)) {
+        return response()->json(["message" => "Wrong password"], 401);
+    }
+
+    return response()->json([
+        "message" => "Login successful",
+        "user" => $user
+    ], 200);
+}
 }

@@ -1,0 +1,69 @@
+<div class="registry-model-backdrop" (click)="closeModel()">
+  <div class="registry-model-container" (click)="$event.stopPropagation()">
+
+    <!-- Fiók típus választás -->
+
+    <div *ngIf="selectedType === 'none'">
+
+      <h2>Regisztráció</h2>
+      <p>Fiók típusának kiválasztása</p>
+
+      <button (click)="registerAsUser()">Felhasználóként regisztrálok</button>
+      <button (click)="registerAsTow()">Autómentőként regisztrálok</button>
+
+    </div>
+
+    <!-- Felhasználói regisztráció -->
+
+    <div *ngIf="selectedType === 'user'">
+      <img src="assets/images/logo.png" alt="Logo" class="logo" style="width: 450px; height: 200px;">
+      <button class="registry-back-btn" (click)="back()">← Vissza</button>
+
+      <h2>Regisztráció</h2>
+
+      <form (ngSubmit)="register()">
+        <div class="registry-row">
+          <input type="text" placeholder="Vezetéknév" name="last_name" [(ngModel)]="last_name" required>
+          <input type="text" placeholder="Keresztnév" name="first_name" [(ngModel)]="first_name" required>
+        </div>
+
+        <input type="text" placeholder="Felhasználónév" name="username" [(ngModel)]="username" required>
+        <input type="password" placeholder="Jelszó" name="password" [(ngModel)]="password" required>
+        <input type="email" placeholder="Email" name="email" [(ngModel)]="email" required>
+        <input type="text" placeholder="Telefonszám" name="phone_number" [(ngModel)]="phone_number" required>
+
+
+        <button type="submit" class="primary-btn">
+          Regisztrálás felhasználóként
+        </button>
+      </form>
+    </div>
+
+    <!-- vontatói regisztráció -->
+
+    <div *ngIf="selectedType === 'tow'">
+      <img src="assets/images/logo.png" alt="Logo" class="logo" style="width: 450px; height: 200px;">
+      <button class="registry-back-btn" (click)="back()">← Vissza</button>
+
+      <h2>Regisztráció</h2>
+
+      <form (ngSubmit)="register()">
+        <div class="registry-row">
+          <input type="text" placeholder="Vezetéknév" name="last_name" [(ngModel)]="last_name" required>
+          <input type="text" placeholder="Keresztnév" name="first_name" [(ngModel)]="first_name" required>
+        </div>
+
+        <input type="text" placeholder="Felhasználónév" name="username" [(ngModel)]="username" required>
+        <input type="password" placeholder="Jelszó" name="password" [(ngModel)]="password" required>
+        <input type="email" placeholder="Email" name="email" [(ngModel)]="email" required>
+        <input type="text" placeholder="Telefonszám" name="phone_number" [(ngModel)]="phone_number" required>
+        <input type="number" placeholder="Ár / km" name="priceperkm" [(ngModel)]="priceperkm" required />
+
+        <button type="submit" class="primary-btn">
+          Regisztrálás autómentőként
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>

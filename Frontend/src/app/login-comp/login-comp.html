@@ -1,0 +1,28 @@
+<div class="registry-model-backdrop" (click)="closeModel()">
+  <div class="registry-model-container" (click)="$event.stopPropagation()">
+
+    <img src="assets/images/logo.png" alt="Logo" class="logo" style="width: 450px; height: auto;">
+    <button class="registry-back-btn" (click)="closeModel()">← Vissza</button>
+
+    <h2>Bejelentkezés</h2>
+
+    <form (ngSubmit)="login()">
+
+      <input type="text" placeholder="Felhasználónév" name="username" [(ngModel)]="username" required>
+
+      <input type="password" placeholder="Jelszó" name="password" [(ngModel)]="password" required>
+
+      <label>
+        <input type="checkbox" [(ngModel)]="towuser" name="towuser">
+        Autómentő bejelentkezés
+      </label>
+
+
+      <button type="submit" class="primary-btn">
+        Bejelentkezés
+      </button>
+
+    </form>
+
+  </div>
+</div>

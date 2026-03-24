@@ -1,0 +1,50 @@
+<div class="settings-wrapper">
+  <div class="settings-card">
+    <h2>Felhasználónév</h2>
+
+    <div class="settings-row">
+      <input type="text" [(ngModel)]="username" placeholder="Felhasználónév" class="settings-input" />
+
+      <button class="save-btn" (click)="saveUsername()">
+        Felhasználónév mentése
+      </button>
+    </div>
+
+    <hr class="settings-divider" />
+
+    <div *ngIf="authService.isTowUser()">
+      <h2>Kilométerár</h2>
+
+      <div class="settings-row">
+        <input type="number" [(ngModel)]="pricePerKm" placeholder="Ár / Km" class="settings-input" />
+
+        <span class="currency-label">Ft / km</span>
+
+        <button class="save-btn" (click)="savePricePerKm()">
+          Kilométerár mentése
+        </button>
+      </div>
+
+      <hr class="settings-divider" />
+    </div>
+
+    <h2>Jelszó módosítása</h2>
+
+    <div class="settings-row password-row">
+      <input type="password" [(ngModel)]="password" placeholder="Új jelszó" class="settings-input" />
+
+      <input type="password" [(ngModel)]="confirmPassword" placeholder="Új jelszó megerősítése"
+        class="settings-input" />
+
+      <button class="save-btn" (click)="savePassword()">
+        Jelszó mentése
+      </button>
+    </div>
+
+    <div class="delete-container">
+      <button class="delete-btn" (click)="deleteAccount()">
+        Fiók törlése
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,5 +1,11 @@
+nav {
+  background-color: #1f2f3d;
+}
+
 button {
-  display: block;
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
   margin-top: 5px;
   padding: 10px;
   border-radius: 10px;
@@ -21,6 +27,53 @@ button:hover {
   cursor: pointer;
 }
 
-nav{
-    background-color: #1f2f3d;
+.div-buttons {
+  justify-content: left;
+}
+
+.profile-trigger {
+  background: transparent;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 0;
+  cursor: pointer;
+}
+
+.profile-mini-icon {
+  width: 28px;
+  height: 28px;
+  border: 2px solid white;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.mini-head {
+  width: 8px;
+  height: 8px;
+  border: 2px solid white;
+  border-radius: 50%;
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.mini-body {
+  width: 16px;
+  height: 9px;
+  border: 2px solid white;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  border-bottom: none;
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.navbar-logo {
+  cursor: pointer;
 }

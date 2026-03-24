@@ -1,21 +1,31 @@
-import { HttpClient } from '@angular/common/http';
-import { Component, effect, EventEmitter, NgZone, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  effect,
+  EventEmitter,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  Output,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
+import 'leaflet-routing-machine';
+import { interval, startWith, Subject, switchMap, takeUntil } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+
 import { LeafletMapService } from '../leaflet-map-service';
 import { TowUser } from '../models/towuser.model';
 import { TowUserService } from '../tow-user-service';
-import 'leaflet-routing-machine';
 import { AuthService } from '../auth-service';
 import { UserService } from '../user-service';
 import { LocationTrackingService } from '../location-tracking-service';
-import { C, F } from '@angular/cdk/keycodes';
 import { TowRequestService } from '../tow-request-service';
 import { TowRequest } from '../models/towrequest.model';
-import { interval, startWith, Subject, switchMap, takeUntil } from 'rxjs';
-import { MatDialog } from '@angular/material/dialog';
 import { TowRequestWindow } from '../tow-request-window/tow-request-window';
 import { ViewRatingsWindow } from '../view-ratings-window/view-ratings-window';
+import { LoginComp } from '../login-comp/login-comp';
+import { RegistryComp } from '../registry-comp/registry-comp';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
@@ -27,34 +37,64 @@ L.Icon.Default.mergeOptions({
 
 @Component({
   selector: 'app-leaflet-map',
-  imports: [FormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule, LoginComp, RegistryComp],
   templateUrl: './leaflet-map.html',
   styleUrl: './leaflet-map.css',
 })
+export class LeafletMap implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
-export class LeafletMap implements OnInit {
-  private destroy = new Subject<void>();
   private map!: L.Map;
   private center: L.LatLngExpression = [48.2205, 20.2854];
+
   private userMarker?: L.Marker;
   private userCircle?: L.Circle;
   private towSelfMarker?: L.Marker;
+
+  private routeControl?: L.Routing.Control;
+  private inProgressRouteControl?: L.Routing.Control;
+  private routedInProgressRequestId?: number;
+
   private pickupMarkers = new Map<number, L.Marker>();
   private dropoffMarkers = new Map<number, L.Marker>();
 
-  street?: string;
+  @Output() towUsersOut = new EventEmitter<TowUser[]>();
 
+  street?: string;
   radius?: number;
-  towUsers: TowUser[] = []
+
+  towUsers: TowUser[] = [];
   towMarkers = new Map<number, L.Marker>();
   selectedTowUserId?: number;
 
-  private routeControl?: L.Routing.Control
+  isLoginOpen = false;
+  isRegisterOpen = false;
 
-  private routedInProgressRequestId?: number;
-  private inProgressRouteControl?: L.Routing.Control;
+  towIcon = L.icon({
+    iconUrl: '../../assets/images/truck.png',
+    iconSize: [54, 27],
+  });
 
-  @Output() towUsersOut = new EventEmitter<TowUser[]>();
+  towIconPending = L.icon({
+    iconUrl: '../../assets/images/truck_pending.png',
+    iconSize: [54, 27],
+  });
+
+  towIconActive = L.icon({
+    iconUrl: '../../assets/images/truck_active.png',
+    iconSize: [54, 27],
+  });
+
+  towIconDenied = L.icon({
+    iconUrl: '../../assets/images/truck_denied.png',
+    iconSize: [54, 27],
+  });
+
+  pickupIcon = L.icon({
+    iconUrl: '../../assets/images/car_icon_map.png',
+    iconSize: [30, 22],
+  });
 
   constructor(
     private mapService: LeafletMapService,
@@ -74,167 +114,206 @@ export class LeafletMap implements OnInit {
         this.keepOnlySelectedMarker(selectedId);
         this.removePopupFromMarker(selectedId);
       }
-
-
-
-    })
+    });
 
     effect(() => {
       const location = this.locationTracking.currentLocation();
       if (location && this.map) {
-        this.updateSelfTowUserMarker(location.lat, location.lng)
+        this.updateSelfTowUserMarker(location.lat, location.lng);
       }
-    })
+    });
+  }
+
+  ngOnInit(): void {
+    this.initMap();
+
+    const userId = this.auth.currentUser()?.id;
+    const userType = this.auth.currentUser()?.type;
+
+    if (!userId) {
+      return;
+    }
+
+    if (userType === 'user') {
+      interval(5000)
+        .pipe(
+          startWith(0),
+          switchMap(() => this.towRequestService.getTowRequestsByUser(userId)),
+          takeUntil(this.destroy$)
+        )
+        .subscribe({
+          next: (requests) => {
+            const activeRequest = requests.find(
+              (r) =>
+                r.status === 'awaiting response' || r.status === 'in progress'
+            );
+
+            if (!activeRequest) {
+              if (this.towUserService.selectedTowUser() !== null) {
+                this.towUserService.selectedTowUser.set(null);
+                this.towMarkers.forEach((marker) => this.map.removeLayer(marker));
+                this.towMarkers.clear();
+              }
+            } else if (activeRequest.tow_user?.id) {
+              this.towUserService.selectedTowUser.set(activeRequest.tow_user.id);
+              this.loadSelectedTowUserMarker(
+                activeRequest.tow_user.id,
+                activeRequest.status
+              );
+            }
+
+            const inProgressRequest = requests.find(
+              (r) => r.status === 'in progress'
+            );
+
+            if (inProgressRequest) {
+              if (this.routedInProgressRequestId !== inProgressRequest.id) {
+                // this.drawInProgressRoute(inProgressRequest);
+              }
+            } else {
+              this.clearInProgressRoute();
+            }
+          },
+        });
+    }
+
+    if (userType === 'towUser') {
+      const location = this.locationTracking.currentLocation();
+      if (location) {
+        this.updateSelfTowUserMarker(location.lat, location.lng);
+      }
+
+      interval(5000)
+        .pipe(
+          startWith(0),
+          switchMap(() => this.towRequestService.getTowRequestsByTowUser(userId)),
+          takeUntil(this.destroy$)
+        )
+        .subscribe({
+          next: (requests) => {
+            const activeRequests = requests.filter(
+              (r) =>
+                r.status === 'awaiting response' || r.status === 'in progress'
+            );
+
+            this.loadTowRequestMarkers(activeRequests);
+
+            const visibleRequest = requests.find(
+              (r) =>
+                r.status === 'awaiting response' || r.status === 'in progress'
+            );
+
+            if (!visibleRequest?.tow_user?.id) {
+              if (this.towUserService.selectedTowUser() !== null) {
+                this.towUserService.selectedTowUser.set(null);
+                this.towMarkers.forEach((marker) => this.map.removeLayer(marker));
+                this.towMarkers.clear();
+              }
+              return;
+            }
+
+            this.towUserService.selectedTowUser.set(visibleRequest.tow_user.id);
+            this.loadSelectedTowUserMarker(
+              visibleRequest.tow_user.id,
+              visibleRequest.status
+            );
+
+            const inProgressRequest = requests.find(
+              (r) => r.status === 'in progress'
+            );
+
+            if (inProgressRequest) {
+              if (this.routedInProgressRequestId !== inProgressRequest.id) {
+                // this.drawInProgressRoute(inProgressRequest);
+              }
+            } else {
+              this.clearInProgressRoute();
+            }
+          },
+        });
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  openLogin() {
+    this.isRegisterOpen = false;
+    this.isLoginOpen = true;
+  }
+
+  closeLogin() {
+    this.isLoginOpen = false;
+  }
+
+  openRegister() {
+    this.isLoginOpen = false;
+    this.isRegisterOpen = true;
+  }
+
+  closeRegister() {
+    this.isRegisterOpen = false;
   }
 
   private initMap() {
     this.map = L.map('map', {
       center: this.center,
       zoom: 10,
-      zoomControl: false
+      zoomControl: false,
     });
 
-    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      minZoom: 8,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (ODbL) - Routing by OSRM'
-    });
-
-    tiles.addTo(this.map)
-  }
-
-  ngOnInit() {
-    this.initMap();
-
-    const userId = this.auth.currentUser()?.id;
-    const userType = this.auth.currentUser()?.type;
-    if (!userId) return;
-
-    if (userType === "user") {
-      interval(5000).pipe(
-        startWith(0),
-        switchMap(() => this.towRequestService.getTowRequestsByUser(userId)),
-        takeUntil(this.destroy)
-      ).subscribe({
-        next: (requests) => {
-          // 1. Look for an active request
-          const activeRequest = requests.find(
-            r => r.status === 'awaiting response' || r.status === 'in progress'
-          );
-
-          // 2. If NO active request is found...
-          if (!activeRequest) {
-            // ONLY clear the map if we were previously tracking a specific selected tow user.
-            // This allows markers from the "Search" button to stay on the map.
-            if (this.towUserService.selectedTowUser() !== null) {
-              this.towUserService.selectedTowUser.set(null);
-              this.towMarkers.forEach(marker => this.map.removeLayer(marker));
-              this.towMarkers.clear();
-            }
-          }
-          // 3. If an active request IS found and it has a valid tow_user...
-          else if (activeRequest.tow_user?.id) {
-            // This fixes the "undefined" error: 
-            // We already checked activeRequest and tow_user exist in the 'else if'
-            this.towUserService.selectedTowUser.set(activeRequest.tow_user.id);
-
-            this.loadSelectedTowUserMarker(
-              activeRequest.tow_user.id,
-              activeRequest.status
-            );
-          }
-
-          // 4. Handle Route logic
-          const inProgressRequest = requests.find(r => r.status === 'in progress');
-          if (inProgressRequest) {
-            if (this.routedInProgressRequestId !== inProgressRequest.id) {
-              // this.drawInProgressRoute(inProgressRequest);
-            }
-          } else {
-            this.clearInProgressRoute();
-          }
-        }
-      });
-    }
-    else if (userType === "towUser") {
-      const location = this.locationTracking.currentLocation();
-      if (location) {
-        this.updateSelfTowUserMarker(location.lat, location.lng);
+    const tiles = L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        maxZoom: 18,
+        minZoom: 8,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (ODbL) - Routing by OSRM',
       }
-    }
+    );
 
-    if (userType === "towUser") {
-      interval(5000).pipe(
-        startWith(0),
-        switchMap(() => this.towRequestService.getTowRequestsByTowUser(userId)),
-        takeUntil(this.destroy)
-      ).subscribe({
-        next: (requests) => {
-          // --- ADDED THIS LINE ---
-          // Filter to only show markers for active or pending requests
-          const activeRequests = requests.filter(r => r.status === 'awaiting response' || r.status === 'in progress');
-          this.loadTowRequestMarkers(activeRequests);
-          // -----------------------
-
-          const visibleRequests = requests.find(r => r.status === 'awaiting response' || r.status === 'in progress');
-
-          if (!visibleRequests?.tow_user?.id) {
-            if (this.towUserService.selectedTowUser() !== null) {
-              this.towUserService.selectedTowUser.set(null);
-              this.towMarkers.forEach(marker => this.map.removeLayer(marker));
-              this.towMarkers.clear();
-            }
-            return;
-          }
-
-          this.towUserService.selectedTowUser.set(visibleRequests.tow_user.id);
-          this.loadSelectedTowUserMarker(
-            visibleRequests.tow_user.id,
-            visibleRequests.status
-          );
-
-          const inProgressRequest = requests.find(r => r.status === 'in progress')
-          if (inProgressRequest) {
-            if (this.routedInProgressRequestId !== inProgressRequest.id) {
-              //this.drawInProgressRoute(inProgressRequest);
-            }
-          } else {
-            this.clearInProgressRoute();
-          }
-        }
-      })
-    }
-
+    tiles.addTo(this.map);
   }
 
   getLocation() {
+    if (!this.auth.isLoggedIn()) {
+      return;
+    }
+
     if (!this.map) return;
 
     this.map.locate({
       setView: true,
-      enableHighAccuracy: true
-    })
+      enableHighAccuracy: true,
+    });
 
     this.map.once('locationfound', (e: L.LocationEvent) => {
       const radius = e.accuracy;
-
-      console.log(`location: ${e.latlng.lat}, ${e.latlng.lng}`);
       const { lat, lng } = e.latlng;
+
+      console.log(`location: ${lat}, ${lng}`);
       this.getAddress(lat, lng);
 
       if (this.userMarker) {
         this.map.removeLayer(this.userMarker);
       }
+
       if (this.userCircle) {
         this.map.removeLayer(this.userCircle);
       }
 
-      this.userMarker = L.marker(e.latlng).addTo(this.map).bindPopup('Ezen a területen belül vagy').openPopup();
+      this.userMarker = L.marker(e.latlng)
+        .addTo(this.map)
+        .bindPopup('Ezen a területen belül vagy')
+        .openPopup();
+
       this.userCircle = L.circle(e.latlng, radius).addTo(this.map);
-    })
+    });
 
     this.map.once('locationerror', (e) => {
-      alert("Failed to get location: " + e.message)
+      alert('Failed to get location: ' + e.message);
     });
   }
 
@@ -242,23 +321,27 @@ export class LeafletMap implements OnInit {
     this.mapService.getAddress(lat, lng).subscribe({
       next: (res) => {
         const address = res.display_name;
-        console.log(`Address ${address}`)
+        console.log(`Address ${address}`);
       },
       error: () => {
-        console.error('Failed to get address')
-      }
-    })
+        console.error('Failed to get address');
+      },
+    });
   }
 
-
-
   searchStreet() {
-    if (this.street === undefined) return;
+    if (!this.auth.isLoggedIn()) {
+      return;
+    }
+
+    if (this.street === undefined || this.street.trim() === '') {
+      return;
+    }
 
     this.mapService.searchStreet(this.street).subscribe({
       next: (res) => {
         if (res.length < 1) {
-          console.log("Nem találtuk a keresett címet");
+          console.log('Nem találtuk a keresett címet');
           return;
         }
 
@@ -270,40 +353,18 @@ export class LeafletMap implements OnInit {
         if (this.userMarker) {
           this.map.removeLayer(this.userMarker);
         }
+
         if (this.userCircle) {
           this.map.removeLayer(this.userCircle);
         }
 
-        this.userMarker = L.marker([lat, lng]).addTo(this.map).bindPopup(res[0].display_name).openPopup();
-      }
-    })
+        this.userMarker = L.marker([lat, lng])
+          .addTo(this.map)
+          .bindPopup(res[0].display_name)
+          .openPopup();
+      },
+    });
   }
-
-  towIcon = L.icon({
-    iconUrl: '../../assets/images/truck.png',
-    iconSize: [54, 27]
-  })
-
-
-  towIconPending = L.icon({
-    iconUrl: '../../assets/images/truck_pending.png',
-    iconSize: [54, 27]
-  })
-
-  towIconActive = L.icon({
-    iconUrl: '../../assets/images/truck_active.png',
-    iconSize: [54, 27]
-  })
-
-  towIconDenied = L.icon({
-    iconUrl: '../../assets/images/truck_denied.png',
-    iconSize: [54, 27]
-  })
-
-  pickupIcon = L.icon({
-    iconUrl: '../../assets/images/car_icon_map.png',
-    iconSize: [30, 22]
-  })
 
   private getTowIconByStatus(status?: string): L.Icon {
     if (status === 'awaiting response') {
@@ -359,12 +420,30 @@ export class LeafletMap implements OnInit {
         showAlternatives: false,
         lineOptions: {
           extendToWaypoints: true,
-          missingRouteTolerance: 0
+          missingRouteTolerance: 0,
         },
-        createMarker: () => null
+        createMarker: () => null,
       };
 
       this.routeControl = L.routing.control(options).addTo(this.map);
+
+      this.routeControl.on('routesfound', (e: any) => {
+        const route = e.routes?.[0];
+        if (!route) return;
+
+        const distance = Math.round(route.summary.totalDistance / 1000);
+
+        const markerTowUser = this.towUsers.find(
+          (u) => u.latitude === lat && u.longitude === lng
+        );
+
+        if (markerTowUser) {
+          markerTowUser.distance = distance;
+          marker.setPopupContent(getPopupHtml());
+        }
+
+        console.log(`Distance: ${distance} km`);
+      });
     });
 
     marker.on('popupopen', () => {
@@ -385,10 +464,15 @@ export class LeafletMap implements OnInit {
   }
 
   search() {
+    if (!this.auth.isLoggedIn()) {
+      return;
+    }
+
     if (!this.userMarker) {
       console.error('Nincs felhasználói tartózkodási hely.');
       return;
     }
+
     if (!this.radius) {
       console.error('Nincs megadott sugár');
       return;
@@ -403,18 +487,18 @@ export class LeafletMap implements OnInit {
     this.towUserService.getTowUsers(lat, lng, this.radius).subscribe({
       next: (users: TowUser[]) => {
         const validTowUsers = users.filter(
-          (u: TowUser): u is TowUser & { latitude: number; longitude: number } => u.latitude !== undefined && u.longitude !== undefined
+          (u: TowUser): u is TowUser & { latitude: number; longitude: number } =>
+            u.latitude !== undefined && u.longitude !== undefined
         );
 
         this.towUsers = validTowUsers;
 
-        this.towMarkers.forEach(marker => {
-          this.map.removeLayer(marker)
-        })
-
+        this.towMarkers.forEach((marker) => {
+          this.map.removeLayer(marker);
+        });
         this.towMarkers.clear();
 
-        validTowUsers.forEach(towUser => {
+        validTowUsers.forEach((towUser) => {
           const marker = this.createMarkerWithPopup(
             towUser.latitude,
             towUser.longitude,
@@ -424,31 +508,26 @@ export class LeafletMap implements OnInit {
             true,
             (popupElement) => {
               setTimeout(() => {
-                const requestBtn = popupElement.querySelector('.tow-request-btn');
+                const requestBtn =
+                  popupElement.querySelector('.tow-request-btn');
 
-                requestBtn?.addEventListener('click', (e) => {
+                requestBtn?.addEventListener('click', () => {
                   if (towUser.id != null) {
-                    this.openDialog(towUser.id!);
+                    this.openDialog(towUser.id);
                   }
-                })
-
-
-              }, 0)
-
+                });
+              }, 0);
             }
           );
-
-
 
           if (towUser.id != null) {
             this.towMarkers.set(towUser.id, marker);
           }
         });
 
-
         this.towUsersOut.emit(this.towUsers);
-      }
-    })
+      },
+    });
   }
 
   keepOnlySelectedMarker(towUserId: number) {
@@ -458,13 +537,13 @@ export class LeafletMap implements OnInit {
       if (id !== towUserId) {
         this.map.removeLayer(marker);
       }
-    })
+    });
 
     const selectedMarker = this.towMarkers.get(towUserId);
     this.towMarkers.clear();
 
     if (selectedMarker) {
-      this.towMarkers.set(towUserId, selectedMarker)
+      this.towMarkers.set(towUserId, selectedMarker);
     }
   }
 
@@ -482,45 +561,46 @@ export class LeafletMap implements OnInit {
 
     if (this.towSelfMarker) {
       this.towSelfMarker.setLatLng(position);
-    }
-    else {
-      this.towSelfMarker = L.marker(position).addTo(this.map)
+    } else {
+      this.towSelfMarker = L.marker(position).addTo(this.map);
     }
   }
 
   loadSelectedTowUserMarker(towUserId: number, requestStatus?: string) {
-    const user = this.auth.currentUser()?.type
-    if (user === "user") {
+    const userType = this.auth.currentUser()?.type;
+
+    if (userType === 'user') {
       this.towUserService.getTowUserById(towUserId).subscribe({
         next: (towUser) => {
-          console.log("loaded tow user:", towUser);
+          console.log('loaded tow user:', towUser);
 
           if (towUser.latitude == null || towUser.longitude == null) {
-            return
+            return;
           }
 
-          this.towMarkers.forEach(marker => this.map.removeLayer(marker));
+          this.towMarkers.forEach((marker) => this.map.removeLayer(marker));
           this.towMarkers.clear();
 
-          const marker = L.marker([towUser.latitude, towUser.longitude], { icon: this.getTowIconByStatus(requestStatus) }).addTo(this.map);
+          const marker = L.marker([towUser.latitude, towUser.longitude], {
+            icon: this.getTowIconByStatus(requestStatus),
+          }).addTo(this.map);
 
           this.towMarkers.set(towUserId, marker);
-        }
-      })
+        },
+      });
     }
-
   }
 
   clearRequestMarkers() {
-    this.pickupMarkers.forEach(marker => this.map.removeLayer(marker))
+    this.pickupMarkers.forEach((marker) => this.map.removeLayer(marker));
     this.pickupMarkers.clear();
 
-    this.dropoffMarkers.forEach(marker => this.map.removeLayer(marker));
+    this.dropoffMarkers.forEach((marker) => this.map.removeLayer(marker));
     this.dropoffMarkers.clear();
   }
 
   loadTowRequestMarkers(requests: TowRequest[]) {
-    const requestIds = new Set(requests.map(r => r.id));
+    const requestIds = new Set(requests.map((r) => r.id));
 
     this.pickupMarkers.forEach((marker, id) => {
       if (!requestIds.has(id)) {
@@ -529,7 +609,7 @@ export class LeafletMap implements OnInit {
       }
     });
 
-    requests.forEach(request => {
+    requests.forEach((request) => {
       if (
         request.id == null ||
         request.pickup_lat == null ||
@@ -550,17 +630,19 @@ export class LeafletMap implements OnInit {
             ? L.latLng(currentLocation.lat, currentLocation.lng)
             : null;
         },
-        false
-        ,
+        false,
         (popupElement) => {
           setTimeout(() => {
             const acceptBtn = popupElement.querySelector('.tow-accept-btn');
             const denyBtn = popupElement.querySelector('.tow-deny-btn');
 
-            acceptBtn?.addEventListener('click', () => this.acceptRequestFromMap(request));
-            denyBtn?.addEventListener('click', () => this.denyRequestFromMap(request));
+            acceptBtn?.addEventListener('click', () =>
+              this.acceptRequestFromMap(request)
+            );
+            denyBtn?.addEventListener('click', () =>
+              this.denyRequestFromMap(request)
+            );
           }, 0);
-
         }
       );
 
@@ -573,7 +655,7 @@ export class LeafletMap implements OnInit {
 
     const updated = {
       ...request,
-      status: 'in progress'
+      status: 'in progress',
     };
 
     this.towRequestService.updateTowRequest(request.id, updated).subscribe(() => {
@@ -586,7 +668,7 @@ export class LeafletMap implements OnInit {
 
     const updated = {
       ...request,
-      status: 'denied'
+      status: 'denied',
     };
 
     this.towRequestService.updateTowRequest(request.id, updated).subscribe(() => {
@@ -613,7 +695,7 @@ export class LeafletMap implements OnInit {
         waypoints: [
           L.latLng(towUserLat, towUserLng),
           L.latLng(request.pickup_lat, request.pickup_long),
-          L.latLng(request.dropoff_lat, request.dropoff_long)
+          L.latLng(request.dropoff_lat, request.dropoff_long),
         ],
         addWaypoints: false,
         fitSelectedRoutes: true,
@@ -621,13 +703,13 @@ export class LeafletMap implements OnInit {
         showAlternatives: false,
         lineOptions: {
           extendToWaypoints: true,
-          missingRouteTolerance: 0
+          missingRouteTolerance: 0,
         },
-        createMarker: () => null
+        createMarker: () => null,
       };
 
       this.inProgressRouteControl = L.routing.control(options).addTo(this.map);
-      console.log("in progress route calculated")
+      console.log('in progress route calculated');
       this.routedInProgressRequestId = request.id;
     }
   }
@@ -642,19 +724,13 @@ export class LeafletMap implements OnInit {
   }
 
   openDialog(id: number) {
-    this.towUserService.selectedTowUser.set(id)
-    const dialogRef = this.dialog.open(TowRequestWindow, {
+    this.towUserService.selectedTowUser.set(id);
+
+    this.dialog.open(TowRequestWindow, {
       width: '1000px',
       maxWidth: '95vw',
       maxHeight: '90vh',
-      disableClose: true
-    })
+      disableClose: true,
+    });
   }
-
-
-  ngOnDestroy() {
-    this.destroy.next();
-    this.destroy.complete();
-  }
-
 }
