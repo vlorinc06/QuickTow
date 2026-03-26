@@ -3,6 +3,7 @@ import { Auth } from '../services/auth';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService, AuthUser } from '../auth-service';
+import { TowUserService } from '../tow-user-service';
 
 @Component({
   selector: 'app-login-comp',
@@ -22,7 +23,10 @@ export class LoginComp {
 
   @Output() close = new EventEmitter<void>();
 
-  constructor(@Inject(Auth) private auth: Auth) {}
+  constructor(
+    @Inject(Auth) private auth: Auth,
+    private towUserService: TowUserService
+  ) { }
 
   closeModel() {
     this.close.emit();
@@ -46,6 +50,13 @@ export class LoginComp {
         };
 
         this.authService.setUser(authUser);
+
+        if (authUser.type == "towUser") {
+          this.towUserService.updateTowUser(authUser.id, {
+            status: "available"
+          }).subscribe()
+        }
+
 
         alert('Sikeres bejelentkezés');
         this.closeModel();

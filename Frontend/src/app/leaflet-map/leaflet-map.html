@@ -48,6 +48,8 @@
               style="width: 80px"
               [(ngModel)]="radius"
               placeholder="km"
+              min="1"
+              max="100"
             />
             <span class="text-light fw-bold me-2">
               Km-en belül
@@ -55,7 +57,7 @@
           </div>
 
           <div class="col-12 col-lg-auto mb-1">
-            <button class="btn btn-primary w-100 w-lg-auto" (click)="search()">
+            <button class="btn btn-primary w-100 w-lg-auto" [disabled]="!userMarker || !radius || radius < 0 || radius > 101" (click)="search()">
               <i class="bi bi-search"></i>
               Keresés
             </button>

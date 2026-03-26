@@ -48,9 +48,10 @@ export class LeafletMap implements OnInit, OnDestroy {
   private map!: L.Map;
   private center: L.LatLngExpression = [48.2205, 20.2854];
 
-  private userMarker?: L.Marker;
+  public userMarker?: L.Marker;
   private userCircle?: L.Circle;
   private towSelfMarker?: L.Marker;
+  private dropoffMarker?: L.Marker;
 
   private routeControl?: L.Routing.Control;
   private inProgressRouteControl?: L.Routing.Control;
@@ -168,10 +169,17 @@ export class LeafletMap implements OnInit, OnDestroy {
 
             if (inProgressRequest) {
               if (this.routedInProgressRequestId !== inProgressRequest.id) {
-                // this.drawInProgressRoute(inProgressRequest);
+                this.drawInProgressRoute(inProgressRequest);
+                this.dropoffMarker = L.marker([inProgressRequest.dropoff_lat, inProgressRequest.dropoff_long]).addTo(this.map)
+
               }
             } else {
               this.clearInProgressRoute();
+              if(this.dropoffMarker)
+              {
+                this.map.removeLayer(this.dropoffMarker)
+                this.dropoffMarker = undefined;
+              }
             }
           },
         });
@@ -209,6 +217,12 @@ export class LeafletMap implements OnInit, OnDestroy {
                 this.towMarkers.forEach((marker) => this.map.removeLayer(marker));
                 this.towMarkers.clear();
               }
+              this.clearInProgressRoute();
+              if(this.dropoffMarker)
+              {
+                this.map.removeLayer(this.dropoffMarker)
+              }
+              this.dropoffMarker = undefined;
               return;
             }
 
@@ -224,10 +238,16 @@ export class LeafletMap implements OnInit, OnDestroy {
 
             if (inProgressRequest) {
               if (this.routedInProgressRequestId !== inProgressRequest.id) {
-                // this.drawInProgressRoute(inProgressRequest);
+                this.drawInProgressRoute(inProgressRequest);
+                this.dropoffMarker = L.marker([inProgressRequest.dropoff_lat, inProgressRequest.dropoff_long]).addTo(this.map)
               }
             } else {
               this.clearInProgressRoute();
+              if(this.dropoffMarker)
+              {
+                this.map.removeLayer(this.dropoffMarker)
+                this.dropoffMarker = undefined;
+              }
             }
           },
         });
@@ -274,7 +294,29 @@ export class LeafletMap implements OnInit, OnDestroy {
       }
     );
 
+    const fallbackTiles = L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      {
+        maxZoom: 18,
+        minZoom: 8,
+        attribution:
+          '&copy; OpenStreetMap contributors &copy; CARTO',
+      }
+    )
+
     tiles.addTo(this.map);
+
+    let switchedToFallback = false;
+
+    tiles.on('tileerror', () => {
+      if (switchedToFallback) return;
+
+      console.warn("OSM Tiles failed, switching to fallback.")
+
+      this.map.removeLayer(tiles);
+      fallbackTiles.addTo(this.map);
+      switchedToFallback = true;
+    })
   }
 
   getLocation() {
@@ -363,6 +405,24 @@ export class LeafletMap implements OnInit, OnDestroy {
           .bindPopup(res[0].display_name)
           .openPopup();
       },
+      error: (err) => {
+        console.warn("Address service unavailable, showing default location");
+        const lat = 48.22060420762651;
+        const lng = 20.285486288352846;
+
+        this.map.setView([lat, lng], 15);
+
+        if (this.userMarker) {
+          this.map.removeLayer(this.userMarker);
+        }
+
+        if (this.userCircle) {
+          this.map.removeLayer(this.userCircle);
+        }
+
+        this.userMarker = L.marker([lat, lng])
+          .addTo(this.map)
+      }
     });
   }
 
@@ -491,7 +551,7 @@ export class LeafletMap implements OnInit, OnDestroy {
             u.latitude !== undefined && u.longitude !== undefined
         );
 
-        this.towUsers = validTowUsers;
+        this.towUsers = validTowUsers.filter((u) => u.status === 'available');
 
         this.towMarkers.forEach((marker) => {
           this.map.removeLayer(marker);
@@ -572,7 +632,6 @@ export class LeafletMap implements OnInit, OnDestroy {
     if (userType === 'user') {
       this.towUserService.getTowUserById(towUserId).subscribe({
         next: (towUser) => {
-          console.log('loaded tow user:', towUser);
 
           if (towUser.latitude == null || towUser.longitude == null) {
             return;

@@ -1,4 +1,4 @@
-import { Component, computed, Input, signal, Signal } from '@angular/core';
+import { Component, computed, effect, Input, signal, Signal } from '@angular/core';
 import { TowUser } from '../models/towuser.model';
 import { DecimalPipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
@@ -30,6 +30,8 @@ export class TowUserList {
   userConfirming: boolean = false;
   towUserConfirming: boolean = false;
   towUserRatings = signal<{ [towUserId: number]: any[] }>({});
+  
+
 
   private destroy = new Subject<void>();
 
@@ -38,8 +40,19 @@ export class TowUserList {
     private towUser: TowUserService,
     public auth: AuthService,
     private towRequest: TowRequestService,
-    private ratingService: RatingService
-  ) { }
+    private ratingService: RatingService,
+    private towUserService: TowUserService
+  ) {
+    effect(() => {
+      const userType = this.auth.currentUser()?.type;
+      if (this.auth.currentUser()?.type === "user") {
+        this.checkRequests();
+      }
+      else if (this.auth.currentUser()?.type === "towUser") {
+        this.startPollingRequests();
+      }
+    })
+  }
 
   ngOnInit() {
     const userId = this.auth.currentUser()?.id;
@@ -144,10 +157,10 @@ export class TowUserList {
           }
 
           if (!confirming) {
-            this.userConfirming = false; 
+            this.userConfirming = false;
           }
 
-          if(active?.tow_user.id){
+          if (active?.tow_user.id) {
             this.loadTowUserRatings(active.tow_user.id)
           }
 
@@ -217,7 +230,17 @@ export class TowUserList {
       status: 'in progress'
     }
 
-    this.towRequest.updateTowRequest(id, updated).subscribe()
+    this.towRequest.updateTowRequest(id, updated).subscribe({
+      next: (res) => {
+        this.checkRequests()
+      }
+    })
+    if (request.tow_user.id) {
+      this.towUserService.updateTowUser(request.tow_user.id, {
+        status: "busy"
+      }).subscribe()
+    }
+
 
   }
 
@@ -245,6 +268,12 @@ export class TowUserList {
       this.towUserConfirming = true
       this.openEndDialog(request)
     });
+
+    if (request.tow_user.id) {
+      this.towUserService.updateTowUser(request.tow_user.id, {
+        status: "available"
+      }).subscribe()
+    }
 
   }
 

@@ -21,7 +21,7 @@
                     <div>
                         <div class="car-title">{{ car.brand }} {{car.model}}
                             @if(car.id == vehicles.selectedId){
-                                <span class="text-secondary">Kiválasztva</span>
+                                <span class="text-secondary fw-semibold">Kiválasztva</span>
                             }
                         </div>
                         <div class="car-subtitle">{{ car.license_plate }}</div>
@@ -96,12 +96,15 @@
                 <button class="btn btn-secondary" [ngClass]="{'btn-search':dropoffAddress, 'disabled':!dropoffAddress}" type="button" (click)="searchStreet()">
                     Cím keresése
                 </button>
-            </div>
+        </div>
+        <div class="text-danger mt-1">
+            {{addressMessage()}}
+        </div>
     </div>
 
     <div class="price-section text-end mb-4">
-        <div class="price-main">Végleges Ár: {{fullPrice()}} Ft</div>
-        <div class="price-sub">{{distance()}} Km</div>
+        <div class="price-main">Végleges Ár: {{fullPrice() ?? '-'}} Ft</div>
+        <div class="price-sub">{{distance() ?? '-'}} Km</div>
         <div class="price-sub">{{towUserPrice()}} Ft / Km</div>
     </div>
 
@@ -110,7 +113,7 @@
             Mégsem
         </button>
 
-        <button type="button" class="btn btn-success px-4" (click)="sendRequest()">
+        <button type="button" class="btn btn-success px-4" [disabled]="!this.vehicles.selectedId || !this.pickupAddress || !this.dropoffAddress" (click)="sendRequest() ">
             Kérés küldése
         </button>
     </div>

@@ -32,6 +32,8 @@ export class TowRequestWindow {
   towUserLng = signal<number | null>(null);
   towUserPrice = signal<number | null>(null);
   fullPrice = signal<number | null>(null);
+  addressMessage = signal<string>("");
+  street: string = "";
 
   constructor(
     private dialogeRef: MatDialogRef<TowRequestWindow>,
@@ -137,63 +139,71 @@ export class TowRequestWindow {
   dropoffLng!: number
 
   searchStreet() {
-    if (!this.dropoffAddress) {
-      return
+    if (!this.dropoffAddress) return;
+
+    const fallback = {
+      lat: 48.18766074238631,
+      lng: 20.310257141521426
+    };
+
+    if (this.user.userLocationLat != null && this.user.userLocationLng != null) {
+      this.userLat = this.user.userLocationLat;
+      this.userLng = this.user.userLocationLng;
     }
 
+    this.routeControl = undefined;
+
     this.map.searchStreet(this.dropoffAddress).subscribe({
-      next: (res) => {
-
-        if (this.routeControl) {
-
-          this.routeControl = undefined;
+      next: (res: any[]) => {
+        if(res.length === 0)
+        {
+          this.addressMessage.set("A keresett cím nem található")
+          return
         }
-
-        if (this.user.userLocationLat != null && this.user.userLocationLng != null) {
-          this.userLat = this.user.userLocationLat
-          this.userLng = this.user.userLocationLng
-        }
-
-        const dropoffLat = parseFloat(res[0].lat);
-        const dropoffLng = parseFloat(res[0].lon);
-
-        this.dropoffLat = dropoffLat;
-        this.dropoffLng = dropoffLng;
-
-        console.log("felhasznalo:", this.user.userLocationLat, this.user.userLocationLng)
-
-        const towLat = this.towUserLat();
-        const towLng = this.towUserLng();
-
-        if (towLat != null && towLng != null) {
-          this.waypoints = [
-            L.Routing.waypoint(L.latLng(towLat, towLng)),
-            L.Routing.waypoint(L.latLng(this.userLat, this.userLng)),
-            L.Routing.waypoint(L.latLng(dropoffLat, dropoffLng))
-          ]
-        }
-
-        const router = L.Routing.osrmv1();
-        router.route(this.waypoints, ((err: any, routes: any) => {
-          if (routes && routes.length > 0) {
-            const distance = Math.round(routes[0].summary.totalDistance / 1000);
-            this.distance.set(distance)
-            const towUserPrice = this.towUserPrice()
-
-            if (distance != null && towUserPrice != null) {
-              this.fullPrice.set(distance * towUserPrice);
-            }
-          }
-          else if (err) {
-            console.error("routing error", err);
-          }
-        }) as any)
+        this.addressMessage.set("");
+        this.setDropoff(parseFloat(res[0].lat), parseFloat(res[0].lon));
+        this.calculateRoute();
       },
       error: () => {
-        console.log("cim nem talalhato");
+        console.log("Address service unavailable, using fallback location");
+        this.setDropoff(fallback.lat, fallback.lng);
+        this.calculateRoute();
       }
-    })
+    });
+  }
 
+  private setDropoff(lat: number, lng: number) {
+    this.dropoffLat = lat;
+    this.dropoffLng = lng;
+  }
+
+  private calculateRoute() {
+    const towLat = this.towUserLat();
+    const towLng = this.towUserLng();
+
+    if (towLat == null || towLng == null) return;
+
+    this.waypoints = [
+      L.Routing.waypoint(L.latLng(towLat, towLng)),
+      L.Routing.waypoint(L.latLng(this.userLat, this.userLng)),
+      L.Routing.waypoint(L.latLng(this.dropoffLat, this.dropoffLng))
+    ];
+
+    L.Routing.osrmv1().route(this.waypoints, ((err: any, routes: any) => {
+      if (routes?.length > 0) {
+        const distance = Math.round(routes[0].summary.totalDistance / 1000);
+        const towUserPrice = this.towUserPrice();
+
+        this.distance.set(distance);
+
+        if (towUserPrice != null) {
+          this.fullPrice.set(distance * towUserPrice);
+        }
+      } else if (err) {
+        console.error("routing error", err);
+        this.fullPrice.set(40001);
+      }
+    }) as any);
   }
 
   towRequest!: TowRequestPost;
@@ -222,7 +232,7 @@ export class TowRequestWindow {
 
         const selectedId = this.towUser.selectedTowUser();
         if (selectedId != null) {
-          this.towUser.selectedTowUser.set(selectedId); 
+          this.towUser.selectedTowUser.set(selectedId);
         }
 
         this.closeDialog()

@@ -8,14 +8,14 @@
     }
     @else{
     @for(towUser of towUsers; track $index) {
-    <div class="tow-card d-flex flex-row flex-wrap align-items-center p-3 mb-3 shadow-sm rounded-4 gap-3">
+    <div class="tow-card d-flex flex-row flex-wrap align-items-center p-3 mb-3 ps-4 ps-md-3 shadow-sm rounded-4 gap-3">
 
         <div class="text-center flex-shrink-0">
             <img src="../../assets/images/truck.png" alt="truck" style="width: 80px;">
             <div class="fw-bold mt-2">{{towUser.price_per_km}} Ft / Km</div>
         </div>
 
-        <div class="flex-grow-1 min-w-0 text-start">
+        <div class="flex-grow-1 min-w-0 text-center text-md-start ">
             <h5 class="mb-0 fw-bold text-break">
                 {{towUser.last_name}} {{towUser.first_name}}
             </h5>
@@ -193,10 +193,10 @@
             @if(request.vehicle){
             <div class="d-flex align-items-center gap-2 mt-2 flex-wrap min-w-0">
                 <i class="bi bi-car-front-fill fs-5 flex-shrink-0"></i>
-                <div class="text-break">
+                <div class="text-break fw-semibold">
                     {{ request.vehicle.brand }} {{ request.vehicle.model }}
                     @if(request.vehicle.license_plate){
-                    <span class="text-muted">({{ request.vehicle.license_plate }})</span>
+                    <span class="text-muted fw-normal">({{ request.vehicle.license_plate }})</span>
                     }
                 </div>
             </div>

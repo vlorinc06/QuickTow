@@ -38,7 +38,7 @@ export class TowUserService {
     return this.http.post<TowUser>(apiUrl, user);
   }
 
-  updateTowUser(id: number, user: TowUser) {
+  updateTowUser(id: number, user: TowUser | Partial<TowUser>) {
     const apiUrl = `http://127.0.0.1:8000/api/towusers/${id}`
 
     return this.http.put<TowUser>(apiUrl, user);

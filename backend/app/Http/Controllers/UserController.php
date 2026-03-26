@@ -31,24 +31,22 @@ class UserController extends Controller
             ]
         );
 
-        if ($validator->fails()) 
-        {
+        if ($validator->fails()) {
             return response()->json(['Validation failed:' => $validator->errors()], 400);
-        } 
+        }
 
         $data = $request->all();
         $data['password'] = Hash::make($data['password']);
         $user = User::create($data);
-        return response()->json(["User created successfully" => $user],201);
+        return response()->json(["User created successfully" => $user], 201);
     }
 
 
     public function update(Request $request, $id)
     {
         $user = User::find($id);
-        if(is_null($user))
-        {
-            return response("User not found",404);
+        if (is_null($user)) {
+            return response("User not found", 404);
         }
 
         $validator = Validator::make(
@@ -58,81 +56,80 @@ class UserController extends Controller
                 'first_name' => 'sometimes|required|string|max:50',
                 'username' => 'sometimes|required|string|max:50|unique:users,username,' . $user->id,
                 'password' => 'sometimes|required|string',
-                'email' => 'sometimes|required|email|unique:users,email,'.$user->id,
+                'email' => 'sometimes|required|email|unique:users,email,' . $user->id,
                 'phone_number' => 'sometimes|required|string|max:50'
             ]
         );
-        if ($validator->fails()) 
-        {
+        if ($validator->fails()) {
             return response()->json(['Validation failed:' => $validator->errors()], 400);
-        } 
+        }
 
         $user->fill($request->only([
             'last_name',
             'first_name',
             'username',
+            'password',
             'email',
             'phone_number'
         ]));
 
-        $user->password = Hash::make($request->password);
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
 
         $user->save();
 
-        return response()->json(['User updated successfully'=>$user],200);
-        
+        return response()->json(['User updated successfully' => $user], 200);
     }
 
 
     public function destroy($id)
     {
         $user = User::find($id);
-        if(is_null($user))
-        {
-            return response("User not found",404);
+        if (is_null($user)) {
+            return response("User not found", 404);
         }
         $user->delete();
-        return response("User deleted successfully",200);
+        return response("User deleted successfully", 200);
     }
-    
+
 
     public function getById($id)
     {
         $user = User::find($id);
-        if(is_null($user))
-        {
-            return response("User not found",404);
+        if (is_null($user)) {
+            return response("User not found", 404);
         }
-        return response()->json($user,200);
+        return response()->json($user, 200);
     }
 
     public function login(Request $request)
-{
-    $validator = Validator::make(
-        $request->all(),
-        [
-            'username' => 'required|string',
-            'password' => 'required|string'
-        ]
-    );
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'username' => 'required|string',
+                'password' => 'required|string'
+            ]
+        );
 
-    if ($validator->fails()) {
-        return response()->json($validator->errors(), 400);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $user = User::where('username', $request->username)->first();
+
+        if (is_null($user)) {
+            return response()->json(["message" => "User not found"], 404);
+        }
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(["message" => "Wrong password"], 401);
+        }
+
+        return response()->json([
+            "message" => "Login successful",
+            "user" => $user
+        ], 200);
     }
-
-    $user = User::where('username', $request->username)->first();
-
-    if (is_null($user)) {
-        return response()->json(["message" => "User not found"], 404);
-    }
-
-    if (!Hash::check($request->password, $user->password)) {
-        return response()->json(["message" => "Wrong password"], 401);
-    }
-
-    return response()->json([
-        "message" => "Login successful",
-        "user" => $user
-    ], 200);
-}
 }
