@@ -25,13 +25,12 @@ A QuickTow egy webalkalmazás, amely lehetővé teszi autómentők gyors keresé
 
 Backend:
 
-php artisan migrate --seed
-php artisan serve
+* php artisan migrate --seed
+* php artisan serve
 
 Frontend:
 
-npm install
-ng serve
+* ng serve
 
 ---
 
