@@ -3,7 +3,8 @@
   border: black 3px solid;
   overflow-y: auto;
   padding-right: 10px;
-  height: 81.5vh;
+  height: 80.6vh;
+  margin-top: 0.73vh;
 }
 
 .tow-card {

@@ -3,6 +3,12 @@
 
     <div class="map-overlay" *ngIf="!auth.isLoggedIn()">
       <div class="overlay-actions">
+        <img
+          src="../../assets/images/logo2.png"
+          alt="QuickTow logó"
+          class="overlay-logo"
+        />
+
         <button class="overlay-btn" (click)="openLogin()">
           Bejelentkezés
         </button>

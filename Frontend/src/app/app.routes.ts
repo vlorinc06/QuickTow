@@ -12,5 +12,10 @@ export const routes: Routes = [
   {
     path: 'profile',
     component: ProfilePanelComp
+  },
+  {
+    path: 'about',
+    loadComponent: () =>
+      import('./about-comp/about-comp').then((m) => m.AboutComp)
   }
 ];

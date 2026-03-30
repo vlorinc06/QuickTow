@@ -113,7 +113,7 @@
             Mégsem
         </button>
 
-        <button type="button" class="btn btn-success px-4" [disabled]="!this.vehicles.selectedId || !this.pickupAddress || !this.dropoffAddress" (click)="sendRequest() ">
+        <button type="button" class="btn btn-success px-4" [disabled]="!this.vehicles.selectedId || !this.pickupAddress || !this.fullPrice()" (click)="sendRequest() ">
             Kérés küldése
         </button>
     </div>

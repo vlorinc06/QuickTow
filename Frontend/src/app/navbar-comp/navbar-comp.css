@@ -2,35 +2,35 @@ nav {
   background-color: #1f2f3d;
 }
 
-button {
-  display: flex;
-  gap: 10px;
-  margin-left: auto;
-  margin-top: 5px;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
+.navbar-logo {
   cursor: pointer;
-  background: #1f2f3d;
-  color: white;
-  transition: 0.3s;
 }
 
-button:hover {
-  background: #2c4458;
+/* 🔥 GOMB KONTAINER */
+.div-buttons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto; /* desktop: jobbra */
 }
 
+/* 🔥 GOMBOK */
 .registry-back-btn {
   background: transparent;
   border: none;
   color: white;
   cursor: pointer;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: 0.2s;
 }
 
-.div-buttons {
-  justify-content: left;
+.registry-back-btn:hover {
+  background: rgba(255,255,255,0.1);
 }
 
+/* 🔥 PROFILE */
 .profile-trigger {
   background: transparent;
   border: none;
@@ -38,10 +38,10 @@ button:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 0;
   cursor: pointer;
 }
 
+/* 🔥 MINI AVATAR */
 .profile-mini-icon {
   width: 28px;
   height: 28px;
@@ -74,6 +74,22 @@ button:hover {
   left: 50%;
   transform: translateX(-50%);
 }
-.navbar-logo {
-  cursor: pointer;
+
+/* 🔥 MOBIL */
+@media (max-width: 768px) {
+
+  .container-fluid {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .div-buttons {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center; /* középre */
+  }
+
+  .navbar-logo {
+    margin: 0 auto;
+  }
 }

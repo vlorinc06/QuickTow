@@ -1,3 +1,78 @@
 footer {
-    background: #1f2f3d;
+  background: linear-gradient(180deg, #1f2f3d 0%, #172430 100%);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  position: relative;
+}
+
+/* kis felső glow */
+footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: rgba(255,255,255,0.2);
+  opacity: 0.3;
+}
+
+/* középső szöveg blokk */
+footer .col-md-4:nth-child(2) {
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+/* szövegek */
+footer p {
+  margin: 0 0 6px;
+  line-height: 1.5;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* finom halványítás a hosszabb szöveghez */
+footer .col-md-4:nth-child(2) p {
+  opacity: 0.85;
+}
+
+/* 🔥 gomb */
+.footer-about-btn {
+  margin-top: 10px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #2c4565, #3a5a82);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.footer-about-btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #3a5a82, #4a6f9c);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+/* contact rész */
+footer .col-md-4:last-child p {
+  opacity: 0.85;
+}
+
+/* 🔥 mobil finomítás */
+@media (max-width: 768px) {
+  footer {
+    text-align: center;
+  }
+
+  footer .col-md-4 {
+    margin-bottom: 16px;
+  }
+
+  .footer-about-btn {
+    width: 100%;
+    max-width: 220px;
+  }
 }

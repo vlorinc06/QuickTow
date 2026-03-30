@@ -70,6 +70,14 @@ export class LocationTrackingService {
         const lng = this.fallbackLocation.lng;
         this.currentLocation.set({ lat, lng })
         console.log('fallback location',lat,lng)
+        this.towUserService.updateTowUser(towUserId, { latitude: lat, longitude: lng } as TowUser).subscribe({
+          next: (res) => {
+            console.log('Fallback location updated', res);
+          },
+          error: (err) =>{
+            console.error('Fallback location update failed',err)
+          }
+        });
       },
       {
         enableHighAccuracy: true,

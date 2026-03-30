@@ -1,8 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../auth-service';
 import { UserService } from '../user-service';
+
+export type AlertType = 'success' | 'error' | 'warning' | 'info';
+
+export interface AlertPayload {
+  title: string;
+  text: string;
+  type: AlertType;
+}
 
 @Component({
   selector: 'app-user-settings-comp',
@@ -12,14 +20,14 @@ import { UserService } from '../user-service';
   styleUrls: ['./user-settings-comp.css'],
 })
 export class UserSettingsComp implements OnInit {
+  @Output() showAlert = new EventEmitter<AlertPayload>();
+
   username: string = '';
   password: string = '';
   confirmPassword: string = '';
   pricePerKm: number | null = null;
 
   isSaving = false;
-  errorMessage = '';
-  successMessage = '';
 
   constructor(
     public authService: AuthService,
@@ -34,18 +42,20 @@ export class UserSettingsComp implements OnInit {
     this.pricePerKm = user.price_per_km ?? null;
   }
 
+  private alert(title: string, text: string, type: AlertType = 'info') {
+    this.showAlert.emit({ title, text, type });
+  }
+
   saveUsername() {
     const user = this.authService.currentUser();
     if (!user) return;
 
     if (!this.username.trim()) {
-      alert('A felhasználónév nem lehet üres');
+      this.alert('Hiba', 'A felhasználónév nem lehet üres', 'warning');
       return;
     }
 
     this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
 
     const request =
       user.type === 'towUser'
@@ -55,11 +65,11 @@ export class UserSettingsComp implements OnInit {
     request.subscribe({
       next: () => {
         this.authService.updateUsername(this.username);
-        alert('Felhasználónév frissítve');
+        this.alert('Siker', 'Felhasználónév frissítve', 'success');
         this.isSaving = false;
       },
       error: () => {
-        alert('Hiba történt a frissítés során');
+        this.alert('Hiba', 'Hiba történt a frissítés során', 'error');
         this.isSaving = false;
       },
     });
@@ -67,37 +77,34 @@ export class UserSettingsComp implements OnInit {
 
   savePassword() {
     const user = this.authService.currentUser();
-
     if (!user) return;
 
     if (!this.password || this.password.length < 6) {
-      alert('A jelszónak legalább 6 karakternek kell lennie');
+      this.alert('Hiba', 'A jelszó minimum hossza 6 karakter.', 'warning');
       return;
     }
 
     if (this.password !== this.confirmPassword) {
-      alert('A jelszavak nem egyeznek');
+      this.alert('Hiba', 'A jelszavak nem egyeznek.', 'warning');
       return;
     }
 
     this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
 
     const request =
       user.type === 'towUser'
         ? this.userService.updatePasswordForTowUser(user.id, this.password)
-        : this.userService.updatePasswordForUser(user.id, this.password)
+        : this.userService.updatePasswordForUser(user.id, this.password);
 
     request.subscribe({
       next: () => {
-        alert('jelszó frissítve');
+        this.alert('Siker', 'Jelszó frissítve', 'success');
         this.password = '';
         this.confirmPassword = '';
         this.isSaving = false;
       },
       error: () => {
-        alert('Hiba történt a jelszó frissítése során');
+        this.alert('Hiba', 'Hiba történt', 'error');
         this.isSaving = false;
       },
     });
@@ -107,23 +114,21 @@ export class UserSettingsComp implements OnInit {
     const user = this.authService.currentUser();
     if (!user || user.type !== 'towUser') return;
 
-    if (this.pricePerKm == null || this.pricePerKm <= 0) {
-      this.errorMessage = 'Adj meg érvényes árat';
+    if (!this.pricePerKm || this.pricePerKm <= 0) {
+      this.alert('Hiba', 'Adj meg érvényes árat', 'warning');
       return;
     }
 
     this.isSaving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
 
     this.userService.updatePricePerKm(user.id, this.pricePerKm).subscribe({
       next: () => {
         this.authService.updatePricePerKm(this.pricePerKm!);
-        this.successMessage = 'Ár frissítve';
+        this.alert('Siker', 'Ár frissítve', 'success');
         this.isSaving = false;
       },
       error: () => {
-        this.errorMessage = 'Hiba történt az ár frissítése során';
+        this.alert('Hiba', 'Hiba történt', 'error');
         this.isSaving = false;
       },
     });
@@ -133,23 +138,10 @@ export class UserSettingsComp implements OnInit {
     const user = this.authService.currentUser();
     if (!user) return;
 
-    const confirmed = confirm(
-      'Biztosan törölni szeretnéd a fiókodat? Ez nem visszavonható.'
+    this.alert(
+      'Figyelem',
+      'Biztosan törölni akarod? Ez nem visszavonható.',
+      'warning'
     );
-    if (!confirmed) return;
-
-    const request =
-      user.type === 'towUser'
-        ? this.userService.deleteTowUser(user.id)
-        : this.userService.deleteRegularUser(user.id);
-
-    request.subscribe({
-      next: () => {
-        this.authService.logout();
-      },
-      error: () => {
-        this.errorMessage = 'Hiba történt a törlés során';
-      },
-    });
   }
 }

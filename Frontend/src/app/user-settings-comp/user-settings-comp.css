@@ -1,9 +1,13 @@
 .settings-wrapper {
   padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .settings-card {
+  width: 100%;
   max-width: 750px;
+  box-sizing: border-box;
 }
 
 .settings-row {
@@ -11,16 +15,20 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 15px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .settings-input {
   flex: 1;
+  min-width: 0;
   height: 40px;
   padding: 0 12px;
   border-radius: 6px;
-  border: 1px solid rgba(0,0,0,0.15);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   background: white;
   font-size: 14px;
+  box-sizing: border-box;
 }
 
 .save-btn {
@@ -33,6 +41,7 @@
   cursor: pointer;
   font-weight: 500;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .save-btn:hover {
@@ -43,13 +52,15 @@
   margin: 25px 0;
   border: none;
   height: 1px;
-  background: rgba(0,0,0,0.15);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .delete-container {
   margin-top: 30px;
   display: flex;
   justify-content: flex-end;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .delete-btn {
@@ -64,4 +75,68 @@
 
 .delete-btn:hover {
   background: #8d2323;
+}
+
+.currency-label {
+  white-space: nowrap;
+  font-weight: 500;
+  color: #2c3f55;
+}
+
+@media (max-width: 768px) {
+  .settings-wrapper {
+    padding: 12px;
+  }
+
+  .settings-card {
+    max-width: 100%;
+  }
+
+  .settings-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .settings-input {
+    width: 100%;
+  }
+
+  .save-btn {
+    width: 100%;
+  }
+
+  .currency-label {
+    width: 100%;
+    text-align: left;
+  }
+
+  .delete-container {
+    justify-content: stretch;
+  }
+
+  .delete-btn {
+    width: 100%;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-wrapper {
+    padding: 8px;
+  }
+
+  .settings-input,
+  .save-btn,
+  .delete-btn {
+    font-size: 14px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
 }

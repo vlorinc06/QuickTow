@@ -92,7 +92,7 @@ class RatingController extends Controller
         $rating = Rating::with('user','towUser')->where($type,'=',$id)->get();
         if($rating->isEmpty())
         {
-            return response('No rating found',200);
+            return response()->json([],200);
         }
         return response()->json($rating,200);
     }

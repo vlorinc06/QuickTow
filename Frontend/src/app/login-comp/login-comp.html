@@ -1,28 +1,53 @@
 <div class="registry-model-backdrop" (click)="closeModel()">
   <div class="registry-model-container" (click)="$event.stopPropagation()">
+    <img src="assets/images/logo.png" alt="Logo" class="login-logo">
 
-    <img src="assets/images/logo.png" alt="Logo" class="logo" style="width: 450px; height: auto;">
-    <button class="registry-back-btn" (click)="closeModel()">← Vissza</button>
+    <button class="registry-back-btn" type="button" (click)="closeModel()">← Vissza</button>
 
     <h2>Bejelentkezés</h2>
 
-    <form (ngSubmit)="login()">
+    <form (ngSubmit)="login()" class="login-form" novalidate>
+      <input
+        #usernameInput
+        type="text"
+        placeholder="Felhasználónév"
+        name="username"
+        [(ngModel)]="username"
+      >
 
-      <input type="text" placeholder="Felhasználónév" name="username" [(ngModel)]="username" required>
+      <input
+        type="password"
+        placeholder="Jelszó"
+        name="password"
+        [(ngModel)]="password"
+      >
 
-      <input type="password" placeholder="Jelszó" name="password" [(ngModel)]="password" required>
-
-      <label>
+      <label class="checkbox-row">
         <input type="checkbox" [(ngModel)]="towuser" name="towuser">
-        Autómentő bejelentkezés
+        <span>Autómentő bejelentkezés</span>
       </label>
-
 
       <button type="submit" class="primary-btn">
         Bejelentkezés
       </button>
-
     </form>
-
   </div>
 </div>
+
+<div *ngIf="isMessageOpen" class="custom-alert-backdrop" (click)="closeMessage()">
+  <div class="custom-alert-box" (click)="$event.stopPropagation()">
+    <div class="custom-alert-icon" [ngClass]="messageType">
+      <span *ngIf="messageType === 'success'">✓</span>
+      <span *ngIf="messageType === 'error'">✕</span>
+      <span *ngIf="messageType === 'warning'">!</span>
+      <span *ngIf="messageType === 'info'">i</span>
+    </div>
+
+    <h3>{{ messageTitle }}</h3>
+    <p>{{ messageText }}</p>
+
+    <button type="button" class="custom-alert-btn" (click)="closeMessage()">
+      Rendben
+    </button>
+  </div>
+</div>  

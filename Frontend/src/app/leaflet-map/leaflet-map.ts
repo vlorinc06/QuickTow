@@ -44,6 +44,7 @@ L.Icon.Default.mergeOptions({
 })
 export class LeafletMap implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private pollingStop$ = new Subject<void>();
 
   private map!: L.Map;
   private center: L.LatLngExpression = [48.2205, 20.2854];
@@ -123,140 +124,138 @@ export class LeafletMap implements OnInit, OnDestroy {
         this.updateSelfTowUserMarker(location.lat, location.lng);
       }
     });
+
+    effect((onCleanup) => {
+      const currentUser = this.auth.currentUser();
+      const userId = currentUser?.id;
+      const userType = currentUser?.type;
+
+      if (!userId || !userType) {
+        this.clearInProgressRoute();
+        return;
+      }
+
+      if (userType === 'user') {
+        const sub = interval(5000)
+          .pipe(
+            startWith(0),
+            switchMap(() => this.towRequestService.getTowRequestsByUser(userId)),
+            takeUntil(this.destroy$) // pollingStop$ removed, onCleanup handles this perfectly
+          )
+          .subscribe({
+            next: (requests) => {
+              // ... your existing logic for user ...
+              const activeRequest = requests.find(
+                (r) => r.status === 'awaiting response' || r.status === 'in progress'
+              );
+              
+              if (!activeRequest) {
+                if (this.towUserService.selectedTowUser() !== null) {
+                  this.towUserService.selectedTowUser.set(null);
+                  this.towMarkers.forEach((marker) => this.map.removeLayer(marker));
+                  this.towMarkers.clear();
+                }
+              } else if (activeRequest.tow_user?.id) {
+                this.towUserService.selectedTowUser.set(activeRequest.tow_user.id);
+                this.loadSelectedTowUserMarker(activeRequest.tow_user.id, activeRequest.status);
+              }
+
+              const inProgressRequest = requests.find((r) => r.status === 'in progress');
+              if (inProgressRequest) {
+                if (this.routedInProgressRequestId !== inProgressRequest.id) {
+                  this.drawInProgressRoute(inProgressRequest);
+                  this.dropoffMarker = L.marker([
+                    inProgressRequest.dropoff_lat,
+                    inProgressRequest.dropoff_long
+                  ]).addTo(this.map);
+                }
+              } else {
+                this.clearInProgressRoute();
+                if (this.dropoffMarker) {
+                  this.map.removeLayer(this.dropoffMarker);
+                  this.dropoffMarker = undefined;
+                }
+              }
+            },
+          });
+
+        // Automatically unsubscribes when the effect is re-run or destroyed
+        onCleanup(() => sub.unsubscribe());
+      }
+
+      if (userType === 'towUser') {
+        const location = this.locationTracking.currentLocation();
+        if (location) {
+          this.updateSelfTowUserMarker(location.lat, location.lng);
+        }
+
+        const sub = interval(5000)
+          .pipe(
+            startWith(0),
+            switchMap(() => this.towRequestService.getTowRequestsByTowUser(userId)),
+            takeUntil(this.destroy$) 
+          )
+          .subscribe({
+            next: (requests) => {
+               // ... your existing logic for towUser ...
+               const activeRequests = requests.filter(
+                (r) => r.status === 'awaiting response' || r.status === 'in progress'
+              );
+
+              this.loadTowRequestMarkers(activeRequests);
+
+              const visibleRequest = requests.find(
+                (r) => r.status === 'awaiting response' || r.status === 'in progress'
+              );
+
+              if (!visibleRequest?.tow_user?.id) {
+                if (this.towUserService.selectedTowUser() !== null) {
+                  this.towUserService.selectedTowUser.set(null);
+                  this.towMarkers.forEach((marker) => this.map.removeLayer(marker));
+                  this.towMarkers.clear();
+                }
+                this.clearInProgressRoute();
+                if (this.dropoffMarker) {
+                  this.map.removeLayer(this.dropoffMarker);
+                }
+                this.dropoffMarker = undefined;
+                return;
+              }
+
+              this.towUserService.selectedTowUser.set(visibleRequest.tow_user.id);
+              this.loadSelectedTowUserMarker(
+                visibleRequest.tow_user.id,
+                visibleRequest.status
+              );
+
+              const inProgressRequest = requests.find((r) => r.status === 'in progress');
+              if (inProgressRequest) {
+                if (this.routedInProgressRequestId !== inProgressRequest.id) {
+                  this.drawInProgressRoute(inProgressRequest);
+                  this.dropoffMarker = L.marker([
+                    inProgressRequest.dropoff_lat,
+                    inProgressRequest.dropoff_long
+                  ]).addTo(this.map);
+                }
+              } else {
+                this.clearInProgressRoute();
+                if (this.dropoffMarker) {
+                  this.map.removeLayer(this.dropoffMarker);
+                  this.dropoffMarker = undefined;
+                }
+              }
+            },
+          });
+
+        onCleanup(() => sub.unsubscribe());
+      }
+    });
   }
 
   ngOnInit(): void {
     this.initMap();
 
-    const userId = this.auth.currentUser()?.id;
-    const userType = this.auth.currentUser()?.type;
-
-    if (!userId) {
-      return;
-    }
-
-    if (userType === 'user') {
-      interval(5000)
-        .pipe(
-          startWith(0),
-          switchMap(() => this.towRequestService.getTowRequestsByUser(userId)),
-          takeUntil(this.destroy$)
-        )
-        .subscribe({
-          next: (requests) => {
-            const activeRequest = requests.find(
-              (r) =>
-                r.status === 'awaiting response' || r.status === 'in progress'
-            );
-
-            if (!activeRequest) {
-              if (this.towUserService.selectedTowUser() !== null) {
-                this.towUserService.selectedTowUser.set(null);
-                this.towMarkers.forEach((marker) => this.map.removeLayer(marker));
-                this.towMarkers.clear();
-              }
-            } else if (activeRequest.tow_user?.id) {
-              this.towUserService.selectedTowUser.set(activeRequest.tow_user.id);
-              this.loadSelectedTowUserMarker(
-                activeRequest.tow_user.id,
-                activeRequest.status
-              );
-            }
-
-            const inProgressRequest = requests.find(
-              (r) => r.status === 'in progress'
-            );
-
-            if (inProgressRequest) {
-              if (this.routedInProgressRequestId !== inProgressRequest.id) {
-                this.drawInProgressRoute(inProgressRequest);
-                this.dropoffMarker = L.marker([inProgressRequest.dropoff_lat, inProgressRequest.dropoff_long]).addTo(this.map)
-
-              }
-            } else {
-              this.clearInProgressRoute();
-              if(this.dropoffMarker)
-              {
-                this.map.removeLayer(this.dropoffMarker)
-                this.dropoffMarker = undefined;
-              }
-            }
-          },
-        });
-    }
-
-    if (userType === 'towUser') {
-      const location = this.locationTracking.currentLocation();
-      if (location) {
-        this.updateSelfTowUserMarker(location.lat, location.lng);
-      }
-
-      interval(5000)
-        .pipe(
-          startWith(0),
-          switchMap(() => this.towRequestService.getTowRequestsByTowUser(userId)),
-          takeUntil(this.destroy$)
-        )
-        .subscribe({
-          next: (requests) => {
-            const activeRequests = requests.filter(
-              (r) =>
-                r.status === 'awaiting response' || r.status === 'in progress'
-            );
-
-            this.loadTowRequestMarkers(activeRequests);
-
-            const visibleRequest = requests.find(
-              (r) =>
-                r.status === 'awaiting response' || r.status === 'in progress'
-            );
-
-            if (!visibleRequest?.tow_user?.id) {
-              if (this.towUserService.selectedTowUser() !== null) {
-                this.towUserService.selectedTowUser.set(null);
-                this.towMarkers.forEach((marker) => this.map.removeLayer(marker));
-                this.towMarkers.clear();
-              }
-              this.clearInProgressRoute();
-              if(this.dropoffMarker)
-              {
-                this.map.removeLayer(this.dropoffMarker)
-              }
-              this.dropoffMarker = undefined;
-              return;
-            }
-
-            this.towUserService.selectedTowUser.set(visibleRequest.tow_user.id);
-            this.loadSelectedTowUserMarker(
-              visibleRequest.tow_user.id,
-              visibleRequest.status
-            );
-
-            const inProgressRequest = requests.find(
-              (r) => r.status === 'in progress'
-            );
-
-            if (inProgressRequest) {
-              if (this.routedInProgressRequestId !== inProgressRequest.id) {
-                this.drawInProgressRoute(inProgressRequest);
-                this.dropoffMarker = L.marker([inProgressRequest.dropoff_lat, inProgressRequest.dropoff_long]).addTo(this.map)
-              }
-            } else {
-              this.clearInProgressRoute();
-              if(this.dropoffMarker)
-              {
-                this.map.removeLayer(this.dropoffMarker)
-                this.dropoffMarker = undefined;
-              }
-            }
-          },
-        });
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    
   }
 
   openLogin() {
@@ -792,4 +791,12 @@ export class LeafletMap implements OnInit, OnDestroy {
       disableClose: true,
     });
   }
+  
+  ngOnDestroy(): void {
+    this.pollingStop$.next();
+    this.pollingStop$.complete();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
 }

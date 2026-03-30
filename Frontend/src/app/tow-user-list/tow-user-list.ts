@@ -30,10 +30,11 @@ export class TowUserList {
   userConfirming: boolean = false;
   towUserConfirming: boolean = false;
   towUserRatings = signal<{ [towUserId: number]: any[] }>({});
-  
+
 
 
   private destroy = new Subject<void>();
+  private userPollingStarted = false;
 
   constructor(
     private dialog: MatDialog,
@@ -44,14 +45,22 @@ export class TowUserList {
     private towUserService: TowUserService
   ) {
     effect(() => {
-      const userType = this.auth.currentUser()?.type;
-      if (this.auth.currentUser()?.type === "user") {
+      const user = this.auth.currentUser();
+      if (!user) return;
+
+      if (user.type === "user" && !this.userPollingStarted) {
+        this.userPollingStarted = true;
+
         this.checkRequests();
+
+        setInterval(() => {
+          this.checkRequests();
+        }, 5000);
       }
-      else if (this.auth.currentUser()?.type === "towUser") {
+      else if (user.type === "towUser") {
         this.startPollingRequests();
       }
-    })
+    });
   }
 
   ngOnInit() {

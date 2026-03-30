@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { SubmitRatingWindow } from './submit-rating-window';
 
 describe('SubmitRatingWindow', () => {
@@ -8,7 +8,11 @@ describe('SubmitRatingWindow', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SubmitRatingWindow]
+      imports: [SubmitRatingWindow],
+      providers: [
+      { provide: MatDialogRef, useValue: { close: () => {} } }, 
+      { provide: MAT_DIALOG_DATA, useValue: {} } 
+    ]
     })
     .compileComponents();
 

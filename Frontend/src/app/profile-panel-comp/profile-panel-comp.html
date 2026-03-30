@@ -1,83 +1,247 @@
 <div class="profile-page">
-  <div class="profile-header">
-    <div class="profile-avatar">
-      <div class="avatar-head"></div>
-      <div class="avatar-body"></div>
-    </div>
-
-    <div class="profile-header-text">
-      <div class="name-row">
-        <h1>{{ fullName() }}</h1>
-        <span>
-          {{ isTowUser() ? 'Autómentő fiók' : 'Felhasználói fiók' }}
-        </span>
+  <div class="profile-shell">
+    <div class="profile-header p-3 rounded-4">
+      <div class="profile-avatar">
+        <div class="avatar-head"></div>
+        <div class="avatar-body"></div>
       </div>
 
-      <h3>{{ username() }}</h3>
+      <div class="profile-header-text">
+        <div class="name-row">
+          <div class="identity-block">
+            <h1>{{ fullName() }}</h1>
+            <h3>{{ username() }}</h3>
+          </div>
 
-      <button class="logout-btn" (click)="logout()">Kijelentkezés</button>
+          <span class="account-badge">
+            {{ isTowUser() ? 'Autómentő fiók' : 'Felhasználói fiók' }}
+          </span>
+        </div>
+
+        <button class="logout-btn" (click)="logout()">Kijelentkezés</button>
+      </div>
+    </div>
+
+    <div class="profile-content">
+      <aside class="side-menu">
+        <div class="menu-title">Profil menü</div>
+
+        <ng-container *ngIf="!isTowUser()">
+          <button
+            class="menu-btn"
+            [class.active]="activeTab() === 'settings'"
+            (click)="selectTab('settings')"
+          >
+            <span>Beállítások</span>
+            <span>›</span>
+          </button>
+
+          <button
+            class="menu-btn"
+            [class.active]="activeTab() === 'activeRequests'"
+            (click)="selectTab('activeRequests')"
+          >
+            <span>Vontatási kérések</span>
+            <span>›</span>
+          </button>
+
+          <button
+            class="menu-btn"
+            [class.active]="activeTab() === 'reviews'"
+            (click)="selectTab('reviews')"
+          >
+            <span>Értékelések</span>
+            <span>›</span>
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="isTowUser()">
+          <button
+            class="menu-btn"
+            [class.active]="activeTab() === 'completedRequests'"
+            (click)="selectTab('completedRequests')"
+          >
+            <span>Befejezett vontatások</span>
+            <span>›</span>
+          </button>
+
+          <button
+            class="menu-btn"
+            [class.active]="activeTab() === 'reviews'"
+            (click)="selectTab('reviews')"
+          >
+            <span>Értékelések</span>
+            <span>›</span>
+          </button>
+
+          <button
+            class="menu-btn"
+            [class.active]="activeTab() === 'settings'"
+            (click)="selectTab('settings')"
+          >
+            <span>Beállítások</span>
+            <span>›</span>
+          </button>
+        </ng-container>
+      </aside>
+
+      <main class="main-panel">
+        <ng-container [ngSwitch]="activeTab()">
+          <app-user-settings-comp
+            *ngSwitchCase="'settings'"
+            (showAlert)="handleSettingsAlert($event)">
+          </app-user-settings-comp>
+
+          <div *ngSwitchCase="'activeRequests'" class="panel-section">
+            <div class="section-header">
+              <h2>Vontatási kéréseim</h2>
+              <p>Az általad leadott vontatási kérések listája.</p>
+            </div>
+
+            <div *ngIf="activeRequests().length === 0" class="empty-box">
+              Még nem adtál le vontatási kérést.
+            </div>
+
+            <div *ngFor="let req of activeRequests()" class="request-card">
+              <div class="request-card-top">
+                <div>
+                  <div class="request-id">{{req.user.username}} kérése ({{ req.id }})</div>
+                  <div class="request-subtitle">Felhasználói vontatási kérés</div>
+                </div>
+
+                <div class="status-pill">
+                  @if(req.status == "completed"){
+                    <span class="text-success fw-bold">Teljesítve</span>
+                  }
+                  @else if(req.status == "in progress")
+                  {
+                    <span class="text-success fw-bold">Folyamatban</span>
+                  }
+                  @else if(req.status == "awaiting response")
+                  {
+                    <span class="text-warning fw-bold">Várakozás az autómentő válaszára</span>
+                  }
+                  @else if(req.status == "denied")
+                  {
+                    <span class="text-danger fw-bold">Elutasítva</span>
+                  }
+                  @else if(req.status == "cancelled")
+                  {
+                    <span class="text-danger fw-bold">Visszamondva</span>
+                  }
+                </div>
+              </div>
+
+              <div class="request-grid">
+                <div class="info-item">
+                  <span class="label">Ár</span>
+                  <strong>{{ req.price }} Ft</strong>
+                </div>
+
+                <div class="info-item">
+                  <span class="label">Vontatott autó rendszáma</span>
+                  <strong>{{ req.vehicle?.license_plate || 'Nincs megadva' }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngSwitchCase="'incomingRequests'" class="empty-box">
+            Itt jelenhetnek meg a bejövő vontatási kérések.
+          </div>
+
+          <div *ngSwitchCase="'completedRequests'" class="panel-section">
+            <div class="section-header">
+              <h2>Befejezett vontatások</h2>
+              <p>Az általad teljesített vontatások listája.</p>
+            </div>
+
+            <div *ngIf="completedRequests().length === 0" class="empty-box">
+              Még nem teljesítettél vontatási kérést.
+            </div>
+
+            <div *ngFor="let req of completedRequests()" class="request-card">
+              <div class="request-card-top">
+                <div>
+                  <div class="request-id">{{req.user.username}} kérése ({{ req.id }})</div>
+                  <div class="request-subtitle">Teljesített vontatás</div>
+                </div>
+
+                <div class="status-pill" style="background-color: green;">
+                  @if(req.status === 'completed'){
+                    Teljesítve
+                  }
+                </div>
+              </div>
+
+              <div class="request-grid">
+                <div class="info-item">
+                  <span class="label">Ár</span>
+                  <strong>{{ req.price }} Ft</strong>
+                </div>
+
+                <div class="info-item">
+                  <span class="label">Vontatott autó rendszáma</span>
+                  <strong>{{ req.vehicle?.license_plate || 'Nincs megadva' }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngSwitchCase="'reviews'" class="panel-section">
+            <div class="section-header">
+              <h2>Értékelések</h2>
+              <p>
+                {{ isTowUser()
+                  ? 'A hozzád érkezett értékelések.'
+                  : 'Az általad írt értékelések.' }}
+              </p>
+            </div>
+
+            <div *ngIf="reviews().length === 0" class="empty-box">
+              Itt jelennek meg az értékelések.
+            </div>
+
+            <div *ngFor="let review of reviews()" class="review-card">
+              <div class="review-top">
+                <div class="review-user">
+                  {{ review.user?.username || 'Ismeretlen felhasználó' }} véleménye:
+                </div>
+
+                <div class="rating-badge text-warning">
+                  {{ getStars(review.rating) }}
+                </div>
+              </div>
+
+              <div class="review-text">
+                {{ review.text || 'Ehhez az értékeléshez nem tartozik szöveg.' }}
+              </div>
+            </div>
+          </div>
+
+          <div *ngSwitchDefault class="empty-box">
+            Válassz egy menüpontot.
+          </div>
+        </ng-container>
+      </main>
     </div>
   </div>
+</div>
 
-  <div class="profile-content">
-    <div class="side-menu">
-      <ng-container *ngIf="!isTowUser()">
-        <button class="menu-btn" (click)="selectTab('settings')">
-          Beállítások <span>›</span>
-        </button>
-
-        <button class="menu-btn" (click)="selectTab('activeRequests')">
-          Vontatási kérések <span>›</span>
-        </button>
-
-        <button class="menu-btn" (click)="selectTab('reviews')">
-          Értékelések <span>›</span>
-        </button>
-      </ng-container>
-
-      <ng-container *ngIf="isTowUser()">
-        <button class="menu-btn" (click)="selectTab('incomingRequests')">
-          Bejövő vontatási kérések <span>›</span>
-        </button>
-
-        <button class="menu-btn" (click)="selectTab('completedRequests')">
-          Befejezett vontatások <span>›</span>
-        </button>
-
-        <button class="menu-btn" (click)="selectTab('settings')">
-          Beállítások <span>›</span>
-        </button>
-
-        <button class="menu-btn" (click)="selectTab('reviews')">
-          Értékelések <span>›</span>
-        </button>
-      </ng-container>
+<div *ngIf="isMessageOpen" class="custom-alert-backdrop" (click)="closeMessage()">
+  <div class="custom-alert-box" (click)="$event.stopPropagation()">
+    <div class="custom-alert-icon" [ngClass]="messageType">
+      <span *ngIf="messageType === 'success'">✓</span>
+      <span *ngIf="messageType === 'error'">✕</span>
+      <span *ngIf="messageType === 'warning'">!</span>
+      <span *ngIf="messageType === 'info'">i</span>
     </div>
 
-    <div class="main-panel">
-      <ng-container [ngSwitch]="activeTab()">
-        <app-user-settings-comp *ngSwitchCase="'settings'"></app-user-settings-comp>
+    <h3>{{ messageTitle }}</h3>
+    <p>{{ messageText }}</p>
 
-        <div *ngSwitchCase="'activeRequests'" class="empty-box">
-          Itt jelenhetnek meg a vontatási kéréseid.
-        </div>
-
-        <div *ngSwitchCase="'incomingRequests'" class="empty-box">
-          Itt jelenhetnek meg a bejövő vontatási kérések.
-        </div>
-
-        <div *ngSwitchCase="'completedRequests'" class="empty-box">
-          Itt jelenhetnek meg a befejezett vontatások.
-        </div>
-
-        <div *ngSwitchCase="'reviews'" class="empty-box">
-          Itt jelenhetnek meg az értékeléseid.
-        </div>
-
-        <div *ngSwitchDefault class="empty-box">
-          Válassz egy menüpontot.
-        </div>
-      </ng-container>
-    </div>
+    <button type="button" class="custom-alert-btn" (click)="closeMessage()">
+      Rendben
+    </button>
   </div>
 </div>

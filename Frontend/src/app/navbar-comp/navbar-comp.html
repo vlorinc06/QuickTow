@@ -8,14 +8,14 @@
       (click)="openHome()"
     />
 
-    <div class="div-buttons d-flex ms-auto align-items-center">
+    <div class="div-buttons d-flex align-items-center">
 
       <ng-container *ngIf="!isLoggedIn()">
-        <button (click)="openRegister()" class="registry-back-btn me-2">
+        <button (click)="openRegister()" class="registry-back-btn">
           Regisztráció
         </button>
 
-        <button (click)="openLogin()" class="registry-back-btn me-2">
+        <button (click)="openLogin()" class="registry-back-btn">
           Bejelentkezés
         </button>
       </ng-container>
