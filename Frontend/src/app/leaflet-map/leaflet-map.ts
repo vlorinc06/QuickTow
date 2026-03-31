@@ -140,11 +140,10 @@ export class LeafletMap implements OnInit, OnDestroy {
           .pipe(
             startWith(0),
             switchMap(() => this.towRequestService.getTowRequestsByUser(userId)),
-            takeUntil(this.destroy$) // pollingStop$ removed, onCleanup handles this perfectly
+            takeUntil(this.destroy$) 
           )
           .subscribe({
             next: (requests) => {
-              // ... your existing logic for user ...
               const activeRequest = requests.find(
                 (r) => r.status === 'awaiting response' || r.status === 'in progress'
               );
@@ -178,8 +177,6 @@ export class LeafletMap implements OnInit, OnDestroy {
               }
             },
           });
-
-        // Automatically unsubscribes when the effect is re-run or destroyed
         onCleanup(() => sub.unsubscribe());
       }
 
@@ -197,7 +194,6 @@ export class LeafletMap implements OnInit, OnDestroy {
           )
           .subscribe({
             next: (requests) => {
-               // ... your existing logic for towUser ...
                const activeRequests = requests.filter(
                 (r) => r.status === 'awaiting response' || r.status === 'in progress'
               );
