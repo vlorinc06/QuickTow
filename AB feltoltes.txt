@@ -1,169 +1,389 @@
-Create Table felhasznalo(
-    vezeteknev varchar(50),
-    keresztnev varchar(50),
-    felhasznalonev varchar(50),
-    jelszo varchar(50),
-    email varchar(50),
-    telefonszam varchar(50),
-    felhasznaloID int,
-    CONSTRAINT PK_felhasznID PRIMARY KEY (felhasznaloID)
-);
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Gép: 127.0.0.1
+-- Létrehozás ideje: 2026. Már 31. 13:39
+-- Kiszolgáló verziója: 10.4.32-MariaDB
+-- PHP verzió: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
 
-CREATE TABLE jarmu(
-    rendszam varchar(20),
-    marka varchar(20),
-    tipus varchar(20),
-    jarmuID int,
-    felhasznaloID int,
-    CONSTRAINT PK_jarmuID PRIMARY KEY (jarmuID),
-    CONSTRAINT FK_jarmuFelhasznID FOREIGN KEY (felhasznaloID) REFERENCES felhasznalo(felhasznaloID)
-);
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
-CREATE TABLE automento(
-    vezeteknev varchar(50),
-    keresztnev varchar(50),
-    felhasznalonev varchar(50),
-    jelszo varchar(50),
-    email varchar(50),
-    telefonszam varchar(50),
-    kordinataX double,
-    kordinataY double,
-    statusz varchar(20),
-    mentoID int,
-    CONSTRAINT PK_mentoID Primary KEY (mentoID)
-);
+--
+-- Adatbázis: `quicktow`
+--
 
-CREATE TABLE vontatasikeres(
-    vontatasiID int,
-    felhasznaloID int,
-    jarmuID int,
-    mentoID int,
-    felvetelipontX double,
-    felvetelipontY double,
-    lerakasipontX double,
-    lerakasipontY double,
-    statusz varchar(20),
-    ar int,
-    CONSTRAINT PK_vontatasiID PRIMARY KEY (vontatasiID),
-    CONSTRAINT FK_vontatasFelhasznID FOREIGN KEY (felhasznaloID) REFERENCES felhasznalo(felhasznaloID),
-    CONSTRAINT FK_vontatasJarmuID FOREIGN KEY (jarmuID) REFERENCES jarmu(jarmuID),
-    CONSTRAINT FK_vontatasMentoID FOREIGN KEY (mentoID) REFERENCES automento(mentoID)
-);
+-- --------------------------------------------------------
 
-CREATE TABLE fizetes(
-    fizetesID int,
-    ar int,
-    idopont varchar(50),
-    felhasznaloID int,
-    mentoID int,
-    fizetesimodszer varchar(20),
-    CONSTRAINT PK_fizetesID PRIMARY KEY (fizetesID),
-    CONSTRAINT FK_fizetesFelhasznID FOREIGN KEY (felhasznaloID) REFERENCES felhasznalo(felhasznaloID),
-    CONSTRAINT FK_fizetesMentoID FOREIGN KEY (mentoID) REFERENCES automento(mentoID)
-);
+--
+-- Tábla szerkezet ehhez a táblához `migrations`
+--
 
-CREATE TABLE ertekeles(
-    ertekelesID int,
-    felhasznaloID int,
-    mentoID int,
-    vontatasID int,
-    ertekeles int,
-    szoveg varchar(200),
-    idopont varchar(50),
-    CONSTRAINT PK_ertekelesID PRIMARY KEY (ertekelesID),
-    CONSTRAINT FK_ertekelesFelhasznaloID FOREIGN KEY (felhasznaloID) REFERENCES felhasznalo(felhasznaloID),
-    CONSTRAINT FK_ertekelesMentoID FOREIGN KEY (mentoID) REFERENCES automento(mentoID),
-    CONSTRAINT FK_ertekelesVontatasID FOREIGN KEY (vontatasID) REFERENCES vontatasikeres(vontatasiID)
-);
-INSERT INTO felhasznalo (felhasznaloID, vezeteknev, keresztnev, felhasznalonev, jelszo, email, telefonszam)
-VALUES
-(1, 'Kiss', 'Péter', 'pkiss', 'jelszo123', 'pkiss@gmail.com', '06301234567'),
-(2, 'Nagy', 'Anna', 'annus', 'titok456', 'anna.nagy@yahoo.com', '06204567891'),
-(3, 'Tóth', 'László', 'laszit', 'pass789', 'toth.l@gmail.com', '06709876543'),
-(4, 'Szabó', 'Réka', 'rekuci', 'reka111', 'reka.szabo@freemail.hu', '06305556666'),
-(5, 'Molnár', 'Gábor', 'gabi_m', 'molnar12', 'gabi.molnar@outlook.com', '06203334444'),
-(6, 'Horváth', 'Dóra', 'dodo', 'dodo22', 'dora.horvath@gmail.com', '06701112233'),
-(7, 'Farkas', 'Bence', 'benyo', 'benyo33', 'bence.farkas@mail.com', '06304445555'),
-(8, 'Balogh', 'Zsófia', 'zsofiB', 'zsofi88', 'zsofi.balogh@gmail.com', '06201110000'),
-(9, 'Varga', 'István', 'istiV', 'vargaa', 'varga.istvan@freemail.hu', '06706665555'),
-(10, 'Kovács', 'Emese', 'emi', 'emese123', 'emese.kovacs@yahoo.com', '06302221111'),
-(11, 'Simon', 'Tamás', 'stomi', 'passT', 'simon.tamas@mail.com', '06707778888'),
-(12, 'Jakab', 'Rita', 'ritaJ', 'jaki22', 'jakab.rita@gmail.com', '06203332211'),
-(13, 'Papp', 'Balázs', 'pbal', 'pappbal', 'papp.balazs@gmail.com', '06301239876'),
-(14, 'Szalai', 'Márta', 'martaS', 'szalaiM', 'szalai.marta@freemail.hu', '06706669999'),
-(15, 'Veres', 'Levente', 'leviV', 'leviTow', 'veres.levente@outlook.com', '06207775555');
+CREATE TABLE `migrations` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO jarmu (jarmuID, rendszam, marka, tipus, felhasznaloID)
-VALUES
-(1, 'ABC-123', 'Toyota', 'Corolla', 1),
-(2, 'BCD-234', 'Volkswagen', 'Golf', 2),
-(3, 'CDE-345', 'Ford', 'Focus', 3),
-(4, 'DEF-456', 'Renault', 'Megane', 4),
-(5, 'EFG-567', 'Opel', 'Astra', 5),
-(6, 'FGH-678', 'Peugeot', '308', 6),
-(7, 'GHI-789', 'Hyundai', 'i30', 7),
-(8, 'HIJ-890', 'Kia', 'Ceed', 8),
-(9, 'IJK-901', 'Mazda', '3', 9),
-(10, 'JKL-012', 'Skoda', 'Octavia', 10),
-(11, 'LMN-234', 'BMW', '320d', 11),
-(12, 'MNO-345', 'Audi', 'A3', 12),
-(13, 'NOP-456', 'Mercedes', 'C200', 13),
-(14, 'OPQ-567', 'Seat', 'Leon', 14),
-(15, 'PQR-678', 'Suzuki', 'Vitara', 15);
+--
+-- A tábla adatainak kiíratása `migrations`
+--
 
-INSERT INTO automento (mentoID, vezeteknev, keresztnev, felhasznalonev, jelszo, email, telefonszam, kordinataX, kordinataY, statusz)
-VALUES
-(1, 'Lukács', 'Tamás', 'lukitow', 'tow123', 'lukacs.tamas@tow.hu', '06309998888', 47.4979, 19.0402, 'elérhető'),
-(2, 'Kocsis', 'Bálint', 'bala', 'towtow', 'kocsis.balint@tow.hu', '06702223333', 47.5312, 21.6273, 'elérhető'),
-(3, 'Nemes', 'Gergő', 'gergoN', 'gergoTow', 'nemes.gergo@tow.hu', '06305557777', 47.902, 20.374, 'foglalt'),
-(4, 'Szűcs', 'Erik', 'eriktow', 'passTow', 'szucs.erik@tow.hu', '06207778888', 46.253, 20.141, 'elérhető'),
-(5, 'Oláh', 'Kristóf', 'kristow', 'tow2025', 'olah.kristof@tow.hu', '06703334444', 47.531, 19.05, 'elérhető'),
-(6, 'Török', 'Miklós', 'mikitow', 'miki22', 'torok.miklos@tow.hu', '06302225555', 47.67, 19.28, 'foglalt'),
-(7, 'Bognár', 'Ádám', 'adamB', 'adamTow', 'bognar.adam@tow.hu', '06701113333', 47.92, 20.14, 'elérhető');
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
+(1, '2026_01_19_120710_create_users_table', 1),
+(2, '2026_01_20_142636_create_vehicles_table', 1),
+(3, '2026_01_20_142646_create_tow_users_table', 1),
+(4, '2026_01_20_142808_create_tow_requests_table', 1),
+(5, '2026_01_20_142838_create_ratings_table', 1);
 
-INSERT INTO vontatasikeres (vontatasiID, felhasznaloID, jarmuID, mentoID, felvetelipontX, felvetelipontY, lerakasipontX, lerakasipontY, statusz, ar)
-VALUES
-(1, 1, 1, 1, 47.49, 19.05, 47.51, 19.02, 'befejezve', 15000),
-(2, 2, 2, 2, 47.54, 21.61, 47.52, 21.63, 'befejezve', 18000),
-(3, 3, 3, 3, 47.91, 20.36, 47.89, 20.38, 'függőben', 0),
-(4, 4, 4, 1, 46.26, 20.15, 46.24, 20.13, 'befejezve', 16000),
-(5, 5, 5, 4, 47.52, 19.04, 47.54, 19.06, 'befejezve', 20000),
-(6, 6, 6, 5, 47.51, 19.07, 47.53, 19.05, 'függőben', 0),
-(7, 7, 7, 2, 47.54, 21.62, 47.56, 21.64, 'befejezve', 17000),
-(8, 8, 8, 3, 47.88, 20.38, 47.9, 20.36, 'befejezve', 19000),
-(9, 9, 9, 1, 47.49, 19.02, 47.51, 19.04, 'befejezve', 21000),
-(10, 10, 10, 5, 47.52, 19.06, 47.54, 19.04, 'függőben', 0),
-(11, 11, 11, 6, 47.65, 19.26, 47.68, 19.23, 'befejezve', 22000),
-(12, 12, 12, 7, 47.93, 20.13, 47.91, 20.12, 'befejezve', 25000),
-(13, 13, 13, 2, 47.53, 21.62, 47.55, 21.65, 'befejezve', 18000),
-(14, 14, 14, 3, 47.89, 20.36, 47.87, 20.35, 'függőben', 0),
-(15, 15, 15, 4, 46.26, 20.12, 46.28, 20.15, 'befejezve', 20000);
+-- --------------------------------------------------------
 
-INSERT INTO fizetes (fizetesID, ar, idopont, felhasznaloID, mentoID, fizetesimodszer)
-VALUES
-(1, 15000, '2025-01-15 14:32', 1, 1, 'kártya'),
-(2, 18000, '2025-02-10 11:22', 2, 2, 'készpénz'),
-(3, 16000, '2025-03-08 09:45', 4, 1, 'kártya'),
-(4, 20000, '2025-03-25 17:30', 5, 4, 'utalás'),
-(5, 17000, '2025-04-12 10:00', 7, 2, 'kártya'),
-(6, 19000, '2025-05-01 15:00', 8, 3, 'utalás'),
-(7, 21000, '2025-06-18 19:40', 9, 1, 'készpénz'),
-(8, 22000, '2025-07-02 08:50', 11, 6, 'kártya'),
-(9, 25000, '2025-08-14 12:30', 12, 7, 'utalás'),
-(10, 18000, '2025-09-05 16:10', 13, 2, 'készpénz'),
-(11, 20000, '2025-09-20 11:11', 15, 4, 'kártya');
+--
+-- Tábla szerkezet ehhez a táblához `ratings`
+--
 
-INSERT INTO ertekeles (ertekelesID, felhasznaloID, mentoID, vontatasID, ertekeles, szoveg, idopont)
-VALUES
-(1, 1, 1, 1, 5, 'Gyors és profi munka, ajánlom!', '2025-01-15'),
-(2, 2, 2, 2, 4, 'Kicsit késett, de segítőkész volt.', '2025-02-11'),
-(3, 4, 1, 4, 5, 'Nagyon elégedett vagyok!', '2025-03-09'),
-(4, 5, 4, 5, 5, 'Kedves és precíz mentős.', '2025-03-26'),
-(5, 7, 2, 7, 4, 'Jó szolgáltatás, kicsit drága.', '2025-04-13'),
-(6, 8, 3, 8, 5, 'Gyors reakció, minden rendben.', '2025-05-02'),
-(7, 9, 1, 9, 5, 'Minden rendben zajlott.', '2025-06-19'),
-(8, 11, 6, 11, 4, 'Pontos és udvarias.', '2025-07-03'),
-(9, 12, 7, 12, 5, 'Kiváló, modern felszerelés.', '2025-08-15'),
-(10, 13, 2, 13, 4, 'Gyorsan reagált, de drága volt.', '2025-09-06'),
-(11, 15, 4, 15, 5, 'Tökéletes szolgáltatás.', '2025-09-22');
+CREATE TABLE `ratings` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user` bigint(20) UNSIGNED DEFAULT NULL,
+  `tow_user` bigint(20) UNSIGNED DEFAULT NULL,
+  `tow_request` bigint(20) UNSIGNED NOT NULL,
+  `rating` int(11) NOT NULL,
+  `text` varchar(200) DEFAULT NULL,
+  `date` date NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- A tábla adatainak kiíratása `ratings`
+--
+
+INSERT INTO `ratings` (`id`, `user`, `tow_user`, `tow_request`, `rating`, `text`, `date`) VALUES
+(1, 1, 1, 1, 4, 'Rugalmas és precíz.', '2026-03-31'),
+(2, 2, 1, 1, 4, 'Ajánlom mindenkinek.', '2026-03-31'),
+(3, 3, 1, 1, 4, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(4, 1, 2, 2, 5, 'Rugalmas és precíz.', '2026-03-31'),
+(5, 2, 2, 2, 5, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(6, 3, 2, 2, 5, 'Ajánlom mindenkinek.', '2026-03-31'),
+(7, 1, 3, 3, 4, 'Nagyon kedves és profi.', '2026-03-31'),
+(8, 2, 3, 3, 4, 'Gyors és megbízható segítség.', '2026-03-31'),
+(9, 3, 3, 3, 4, 'Rugalmas és precíz.', '2026-03-31'),
+(10, 1, 4, 4, 4, 'Rugalmas és precíz.', '2026-03-31'),
+(11, 2, 4, 4, 5, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(12, 3, 4, 4, 5, 'Ajánlom mindenkinek.', '2026-03-31'),
+(13, 1, 5, 5, 5, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(14, 2, 5, 5, 5, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(15, 3, 5, 5, 5, 'Rugalmas és precíz.', '2026-03-31'),
+(16, 1, 6, 6, 3, 'Ajánlom mindenkinek.', '2026-03-31'),
+(17, 2, 6, 6, 3, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(18, 3, 6, 6, 3, 'Gyors és megbízható segítség.', '2026-03-31'),
+(19, 1, 7, 7, 4, 'Rugalmas és precíz.', '2026-03-31'),
+(20, 2, 7, 7, 5, 'Ajánlom mindenkinek.', '2026-03-31'),
+(21, 3, 7, 7, 3, 'Gyors és megbízható segítség.', '2026-03-31'),
+(22, 1, 8, 1, 4, 'Ajánlom mindenkinek.', '2026-03-31'),
+(23, 2, 8, 1, 5, 'Rugalmas és precíz.', '2026-03-31'),
+(24, 3, 8, 1, 3, 'Ajánlom mindenkinek.', '2026-03-31'),
+(25, 1, 9, 2, 3, 'Ajánlom mindenkinek.', '2026-03-31'),
+(26, 2, 9, 2, 5, 'Ajánlom mindenkinek.', '2026-03-31'),
+(27, 3, 9, 2, 3, 'Nagyon kedves és profi.', '2026-03-31'),
+(28, 1, 10, 3, 4, 'Nagyon kedves és profi.', '2026-03-31'),
+(29, 2, 10, 3, 5, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(30, 3, 10, 3, 5, 'Ajánlom mindenkinek.', '2026-03-31'),
+(31, 1, 11, 4, 5, 'Gyors és megbízható segítség.', '2026-03-31'),
+(32, 2, 11, 4, 5, 'Ajánlom mindenkinek.', '2026-03-31'),
+(33, 3, 11, 4, 3, 'Rugalmas és precíz.', '2026-03-31'),
+(34, 1, 12, 5, 3, 'Rugalmas és precíz.', '2026-03-31'),
+(35, 2, 12, 5, 5, 'Gyors és megbízható segítség.', '2026-03-31'),
+(36, 3, 12, 5, 5, 'Nagyon kedves és profi.', '2026-03-31'),
+(37, 1, 13, 6, 3, 'Ajánlom mindenkinek.', '2026-03-31'),
+(38, 2, 13, 6, 4, 'Rugalmas és precíz.', '2026-03-31'),
+(39, 3, 13, 6, 3, 'Ajánlom mindenkinek.', '2026-03-31'),
+(40, 1, 14, 7, 5, 'Gyors és megbízható segítség.', '2026-03-31'),
+(41, 2, 14, 7, 4, 'Rugalmas és precíz.', '2026-03-31'),
+(42, 3, 14, 7, 5, 'Rugalmas és precíz.', '2026-03-31'),
+(43, 1, 15, 1, 5, 'Gyors és megbízható segítség.', '2026-03-31'),
+(44, 2, 15, 1, 5, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(45, 3, 15, 1, 3, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(46, 1, 16, 2, 5, 'Ajánlom mindenkinek.', '2026-03-31'),
+(47, 2, 16, 2, 4, 'Nagyon kedves és profi.', '2026-03-31'),
+(48, 3, 16, 2, 5, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(49, 1, 17, 3, 5, 'Nagyon kedves és profi.', '2026-03-31'),
+(50, 2, 17, 3, 3, 'Nagyon kedves és profi.', '2026-03-31'),
+(51, 3, 17, 3, 3, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(52, 1, 18, 4, 5, 'Gyors és megbízható segítség.', '2026-03-31'),
+(53, 2, 18, 4, 5, 'Gyors és megbízható segítség.', '2026-03-31'),
+(54, 3, 18, 4, 5, 'Ajánlom mindenkinek.', '2026-03-31'),
+(55, 1, 19, 5, 3, 'Rugalmas és precíz.', '2026-03-31'),
+(56, 2, 19, 5, 3, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(57, 3, 19, 5, 4, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(58, 1, 20, 6, 5, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(59, 2, 20, 6, 3, 'Nagyon jó kommunikáció.', '2026-03-31'),
+(60, 3, 20, 6, 3, 'Nagyon kedves és profi.', '2026-03-31');
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `tow_requests`
+--
+
+CREATE TABLE `tow_requests` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user` bigint(20) UNSIGNED DEFAULT NULL,
+  `vehicle` bigint(20) UNSIGNED NOT NULL,
+  `tow_user` bigint(20) UNSIGNED DEFAULT NULL,
+  `pickup_lat` double NOT NULL,
+  `pickup_long` double NOT NULL,
+  `pickup_note` varchar(255) DEFAULT NULL,
+  `dropoff_lat` double NOT NULL,
+  `dropoff_long` double NOT NULL,
+  `status` varchar(20) NOT NULL,
+  `price` int(11) NOT NULL DEFAULT 0,
+  `user_confirmed` tinyint(1) NOT NULL DEFAULT 0,
+  `tow_user_confirmed` tinyint(1) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- A tábla adatainak kiíratása `tow_requests`
+--
+
+INSERT INTO `tow_requests` (`id`, `user`, `vehicle`, `tow_user`, `pickup_lat`, `pickup_long`, `pickup_note`, `dropoff_lat`, `dropoff_long`, `status`, `price`, `user_confirmed`, `tow_user_confirmed`) VALUES
+(1, 1, 1, 1, 47.48, 19.01, NULL, 47.52, 19.06, 'completed', 12000, 0, 0),
+(2, 2, 2, 2, 47.49, 19.02, NULL, 47.53, 19.07, 'completed', 12800, 0, 0),
+(3, 3, 3, 3, 47.5, 19.03, NULL, 47.54, 19.08, 'completed', 13600, 0, 0),
+(4, 4, 4, 4, 47.51, 19.04, NULL, 47.55, 19.09, 'completed', 14400, 0, 0),
+(5, 5, 5, 5, 47.52, 19.05, NULL, 47.56, 19.1, 'completed', 15200, 0, 0),
+(6, 6, 6, 6, 47.53, 19.06, NULL, 47.57, 19.11, 'completed', 16000, 0, 0),
+(7, 7, 7, 7, 47.54, 19.07, NULL, 47.58, 19.12, 'completed', 16800, 0, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `tow_users`
+--
+
+CREATE TABLE `tow_users` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `last_name` varchar(50) NOT NULL,
+  `first_name` varchar(50) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `email` varchar(50) NOT NULL,
+  `phone_number` varchar(50) NOT NULL,
+  `price_per_km` int(11) NOT NULL DEFAULT 1000,
+  `latitude` double DEFAULT NULL,
+  `longitude` double DEFAULT NULL,
+  `rating` decimal(3,2) NOT NULL DEFAULT 0.00,
+  `rating_count` int(11) NOT NULL DEFAULT 0,
+  `status` varchar(20) NOT NULL DEFAULT 'unavailable'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- A tábla adatainak kiíratása `tow_users`
+--
+
+INSERT INTO `tow_users` (`id`, `last_name`, `first_name`, `username`, `password`, `email`, `phone_number`, `price_per_km`, `latitude`, `longitude`, `rating`, `rating_count`, `status`) VALUES
+(1, 'Lukács', 'Tamás', 'lukitow', '$2y$12$iGBvEKQ3kwgQTMDDcS4fZObsqjJGcz7vArUQ2/hbr1IQol2dtfDwa', 'lukacs.tamas@tow.hu', '06309998888', 1200, 47.4979, 19.0402, 4.00, 3, 'available'),
+(2, 'Kocsis', 'Bálint', 'bala', '$2y$12$bqiNlvTBAeCVBIvqIQRJAOgopAJrkUrr2R0rjzNuI7qO1QUZ8YhSS', 'kocsis.balint@tow.hu', '06702223333', 1000, 47.5312, 21.6273, 5.00, 3, 'available'),
+(3, 'Nemes', 'Gergő', 'gergoN', '$2y$12$YYKkINmGRcJwTM.jGz.mj.vXJp./szm4VQ3JPOFLA2kPTqPraQ/wO', 'nemes.gergo@tow.hu', '06305557777', 1100, 47.902, 20.374, 4.00, 3, 'busy'),
+(4, 'Szűcs', 'Erik', 'eriktow', '$2y$12$QOGhik4irWe.Cu1rycb.l.TNGB8QLItvgqjU1kQXkMsNvhG0Xuh0y', 'szucs.erik@tow.hu', '06207778888', 2000, 46.253, 20.141, 4.67, 3, 'available'),
+(5, 'Oláh', 'Kristóf', 'kristow', '$2y$12$VYIfpXKR1ij4mZAhZgzIUufSOF.9fc3E7UH9v2VLieFqFvZsWz2aO', 'olah.kristof@tow.hu', '06703334444', 1400, 47.531, 19.05, 5.00, 3, 'available'),
+(6, 'Török', 'Miklós', 'mikitow', '$2y$12$cVWdR.wxlxbrPSrdOVCpcOOwUHa2.VsXjTi58iibSJ3UKsZl4mFl2', 'torok.miklos@tow.hu', '06302225555', 1500, 47.67, 19.28, 3.00, 3, 'busy'),
+(7, 'Bognár', 'Ádám', 'adamB', '$2y$12$ruY8AP/AV.rfZrG9fq52geaOnt/DlaYVe42V3sHE0O0wIqcWcgeLK', 'bognar.adam@tow.hu', '06701113333', 1000, 47.92, 20.14, 4.00, 3, 'offline'),
+(8, 'Szabó', 'Dávid', 'davidtow', '$2y$12$.RlOH2anyH268.3eHVqfUenKFRaY6QOPKQ6EKbe6tzfggBdU.QDEm', 'szabo.david@tow.hu', '06301112222', 1300, 48.2389, 20.2971, 4.00, 3, 'available'),
+(9, 'Kovács', 'Bence', 'bencetow', '$2y$12$lwIlZ1qcSndpGC/RlhCeQuDzjTXe8rtVDuTrR3xku60OneC/yhZJi', 'kovacs.bence@tow.hu', '06302223344', 1200, 48.2104, 20.2456, 3.67, 3, 'available'),
+(10, 'Farkas', 'Márk', 'marktow', '$2y$12$/AsZedNYs87j4S9tTyqIDOd7ndZwPPJL62s5wqc2t2lbIhntwPC.W', 'farkas.mark@tow.hu', '06303334455', 1250, 48.1998, 20.3149, 4.67, 3, 'busy'),
+(11, 'Varga', 'Máté', 'matetow', '$2y$12$ulj5kYhN1U.qf6/cVf0sju97I/b0KjgVFIR6ysaFKZKubDu8f2h.m', 'varga.mate@tow.hu', '06304445566', 1400, 48.2632, 20.2518, 4.33, 3, 'available'),
+(12, 'Nagy', 'Roland', 'rolandtow', '$2y$12$Cae3nC85WtspSmh6IxDDY.IfF7pYwL2wlgNrZYS1LewG6duJtPwxC', 'nagy.roland@tow.hu', '06305556677', 1100, 48.1659, 20.2705, 4.33, 3, 'available'),
+(13, 'Horváth', 'Zoltán', 'zolitow', '$2y$12$V9wWDMdsmURGpE7EGr17mOaT7LFHlgZR2B86Zkx4Yagv6o9CMBULC', 'horvath.zoltan@tow.hu', '06306667788', 1500, 48.1205, 20.4022, 3.33, 3, 'available'),
+(14, 'Tóth', 'Gábor', 'gabortow', '$2y$12$AsTrBW1B1qdmCokIjxKBdeS4c.BXaDTFE86QTsohl.j397SRIbtm2', 'toth.gabor@tow.hu', '06307778899', 1600, 48.3406, 20.1801, 4.67, 3, 'busy'),
+(15, 'Molnár', 'Péter', 'petertow', '$2y$12$GimY/d0zvwYxQAVkQnrPl.B9sD3o3B3mmYp8Bh9KdaKr4B.hV.JoS', 'molnar.peter@tow.hu', '06308889900', 1350, 48.0752, 20.1904, 4.33, 3, 'available'),
+(16, 'Balogh', 'László', 'laszlotow', '$2y$12$7dAt.BhgOPuDIczldsWVruBPT13nlTB0N1H4mu3wZNnQLSKUXUX9G', 'balogh.laszlo@tow.hu', '06309990011', 1450, 48.3107, 20.4308, 4.67, 3, 'offline'),
+(17, 'Kiss', 'Attila', 'attilatow', '$2y$12$LCXx/USE5jdae3rkn2yljOLco8eJJ9hC4Ll0NEBaWL6J0HLszYJHe', 'kiss.attila@tow.hu', '06301239876', 1700, 47.9102, 20.3775, 3.67, 3, 'available'),
+(18, 'Papp', 'Norbert', 'norbitow', '$2y$12$OEV/e6ojtz/5v0DnLwlA9ecge4B1aN4LppC42axEIBuM4mn.cSAIu', 'papp.norbert@tow.hu', '06302349876', 1550, 47.9608, 20.0902, 5.00, 3, 'busy'),
+(19, 'Sipos', 'Gergely', 'geritow', '$2y$12$6YZJeLevAHkPSgy.Gv6gbuFG8UDgPYxrhFS87DWoEPUnXnGQtmjSi', 'sipos.gergely@tow.hu', '06303459876', 1650, 48.5204, 20.4609, 3.33, 3, 'available'),
+(20, 'Lakatos', 'István', 'istow', '$2y$12$WXk6b5ahu/nO09Ykayn1L.jSu97gaoDLZTdjajC4g7MHTlU7iF57O', 'lakatos.istvan@tow.hu', '06304569876', 1800, 48.4309, 19.9504, 3.67, 3, 'offline');
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `users`
+--
+
+CREATE TABLE `users` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `last_name` varchar(50) NOT NULL,
+  `first_name` varchar(50) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `email` varchar(50) NOT NULL,
+  `phone_number` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- A tábla adatainak kiíratása `users`
+--
+
+INSERT INTO `users` (`id`, `last_name`, `first_name`, `username`, `password`, `email`, `phone_number`) VALUES
+(1, 'Kiss', 'Péter', 'peti_k99', '$2y$12$M6hcTAzT2hUKR39KK41W9OjXJ9qCjIk1nZRHc2cE4nq/0Fy9ZgbiG', 'peti.k99@gmail.com', '+36301234560'),
+(2, 'Nagy', 'Anna', 'anna.nagy', '$2y$12$aefMOAQYt6gcnScDSIqFw.mS00xWwBLk2S5TvDgShIxjwYfB8vu9W', 'anna.nagy@freemail.hu', '+36301234561'),
+(3, 'Szabó', 'Gábor', 'gabor92', '$2y$12$FjsWXklmw0sBEb6W/eKcQOlHXRWHoODorZHG9o.QTXkBJb5kmoq9y', 'g92.szabo@gmail.com', '+36301234562'),
+(4, 'Tóth', 'László', 'xXlaciXx', '$2y$12$nAwYmF0YSxYuU2yAPYbSLePPZxypxoZNQWwZlngCnWx2KU0xhiqC6', 'laci.toth@outlook.com', '+36301234563'),
+(5, 'Varga', 'Eszter', 'eszti_87', '$2y$12$GjAUVOY/T2YDgxfrFb9JYe7d3Sp/LJ8ZhFSXlaVNx/45aZx9L8bhG', 'eszti87@gmail.com', '+36301234564'),
+(6, 'Kovács', 'Balázs', 'kbala91', '$2y$12$cZHVYYhDNVdVnYFvBT4LjOh5SVsVfnRPiCWum7Eux5jPu5qaHh9ae', 'balazs91@gmail.com', '+36301234565'),
+(7, 'Horváth', 'Dániel', 'danih', '$2y$12$.SWhdJB7uRY9pSfs2hYRauHe1jhRCVnPyxdEnR9Jr3Gi73VKg.xb2', 'dani.h@gmail.com', '+36301234566');
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `vehicles`
+--
+
+CREATE TABLE `vehicles` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `license_plate` varchar(20) DEFAULT NULL,
+  `brand` varchar(20) NOT NULL,
+  `model` varchar(20) NOT NULL,
+  `user` bigint(20) UNSIGNED DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- A tábla adatainak kiíratása `vehicles`
+--
+
+INSERT INTO `vehicles` (`id`, `license_plate`, `brand`, `model`, `user`, `deleted_at`) VALUES
+(1, 'ABC-123', 'Toyota', 'Corolla', 1, NULL),
+(2, 'DEF-456', 'Ford', 'Focus', 2, NULL),
+(3, 'GHI-789', 'VW', 'Golf', 3, NULL),
+(4, 'JKL-321', 'Opel', 'Astra', 4, NULL),
+(5, 'MNO-654', 'Skoda', 'Octavia', 5, NULL),
+(6, 'PQR-987', 'BMW', '320d', 6, NULL),
+(7, 'STU-741', 'Audi', 'A4', 7, NULL);
+
+--
+-- Indexek a kiírt táblákhoz
+--
+
+--
+-- A tábla indexei `migrations`
+--
+ALTER TABLE `migrations`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- A tábla indexei `ratings`
+--
+ALTER TABLE `ratings`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `ratings_user_foreign` (`user`),
+  ADD KEY `ratings_tow_user_foreign` (`tow_user`),
+  ADD KEY `ratings_tow_request_foreign` (`tow_request`);
+
+--
+-- A tábla indexei `tow_requests`
+--
+ALTER TABLE `tow_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `tow_requests_user_foreign` (`user`),
+  ADD KEY `tow_requests_vehicle_foreign` (`vehicle`),
+  ADD KEY `tow_requests_tow_user_foreign` (`tow_user`);
+
+--
+-- A tábla indexei `tow_users`
+--
+ALTER TABLE `tow_users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `tow_users_username_unique` (`username`),
+  ADD UNIQUE KEY `tow_users_email_unique` (`email`);
+
+--
+-- A tábla indexei `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `users_username_unique` (`username`),
+  ADD UNIQUE KEY `users_email_unique` (`email`);
+
+--
+-- A tábla indexei `vehicles`
+--
+ALTER TABLE `vehicles`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `vehicles_user_foreign` (`user`);
+
+--
+-- A kiírt táblák AUTO_INCREMENT értéke
+--
+
+--
+-- AUTO_INCREMENT a táblához `migrations`
+--
+ALTER TABLE `migrations`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT a táblához `ratings`
+--
+ALTER TABLE `ratings`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+
+--
+-- AUTO_INCREMENT a táblához `tow_requests`
+--
+ALTER TABLE `tow_requests`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT a táblához `tow_users`
+--
+ALTER TABLE `tow_users`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+
+--
+-- AUTO_INCREMENT a táblához `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT a táblához `vehicles`
+--
+ALTER TABLE `vehicles`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- Megkötések a kiírt táblákhoz
+--
+
+--
+-- Megkötések a táblához `ratings`
+--
+ALTER TABLE `ratings`
+  ADD CONSTRAINT `ratings_tow_request_foreign` FOREIGN KEY (`tow_request`) REFERENCES `tow_requests` (`id`),
+  ADD CONSTRAINT `ratings_tow_user_foreign` FOREIGN KEY (`tow_user`) REFERENCES `tow_users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `ratings_user_foreign` FOREIGN KEY (`user`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Megkötések a táblához `tow_requests`
+--
+ALTER TABLE `tow_requests`
+  ADD CONSTRAINT `tow_requests_tow_user_foreign` FOREIGN KEY (`tow_user`) REFERENCES `tow_users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `tow_requests_user_foreign` FOREIGN KEY (`user`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `tow_requests_vehicle_foreign` FOREIGN KEY (`vehicle`) REFERENCES `vehicles` (`id`);
+
+--
+-- Megkötések a táblához `vehicles`
+--
+ALTER TABLE `vehicles`
+  ADD CONSTRAINT `vehicles_user_foreign` FOREIGN KEY (`user`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
